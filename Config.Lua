@@ -24,7 +24,6 @@ return {
 	NewsTitle = "What's New",
 	News = {
 		{Kind = "update", Date = "November 22, 2026", Title = "Version 1.0.0", Text = "Improved interface, added new features and performance optimizations."},
-		{Kind = "news",   Date = "November 19, 2026", Title = "New UI Design", Text = "A redesigned dashboard with a more modern and minimal interface."},
 	},
 
 	-- tombol Discord di Settings (hapus tabel ini untuk menyembunyikan card-nya)
