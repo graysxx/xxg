@@ -3,7 +3,7 @@ return {
 	Title = "XXG",
 	Subtitle = "Control Panel",
 	Version = "v1.0.0",
-	Updated = "November 21, 2026",
+	Updated = "November 22, 2026",
 	VersionURL = "",              -- link raw file teks berisi nomor versi terbaru (kosong = tidak dicek)
 
 	-- modul yang dimuat, sesuai urutan tab. Hapus satu nama untuk menonaktifkan modul itu.

@@ -1,5 +1,5 @@
-local BASE = "https://raw.githubusercontent.com/USERNAME/REPO/main/"
-local LOCAL_DIR = nil -- isi "ProjectControlPanel/src/" untuk tes dari folder workspace executor (tanpa internet)
+local BASE = "https://raw.githubusercontent.com/graysxx/xxg/main/"
+local LOCAL_DIR = "C:\\Users\\User\\Downloads\\xxg-panel\\"
 
 if not game:IsLoaded() then game.Loaded:Wait() end
 
