@@ -1,14 +1,13 @@
--- Main.lua: satu-satunya file yang dijalankan user
 local BASE = "https://raw.githubusercontent.com/graysxx/xxg/main/"
-local LOCAL_DIR = nil -- isi "xxg-panel/" untuk tes dari folder workspace executor (tanpa internet)
-local LOG_FILE = "xxg-log.txt" -- catatan progres, ada di folder workspace executor
+local LOCAL_DIR = nil
+local LOG_FILE = "xxg-log.txt"
 
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local env = (getgenv and getgenv()) or _G
 local RunService = game:GetService("RunService")
 
--- catat progres ke file (tetap ada walau game force close)
+-- log
 local logLines = {}
 local function log(msg)
 	table.insert(logLines, string.format("[%.2f] %s", os.clock(), msg))
@@ -16,9 +15,9 @@ local function log(msg)
 	if writefile then pcall(writefile, LOG_FILE, table.concat(logLines, "\n")) end
 end
 
--- matikan instance sebelumnya (kalau script dijalankan ulang) supaya tidak menumpuk
+-- cleanup instance
 if env.XXG_Cleanup then
-	log("membersihkan instance lama")
+	log("Cleaning up previous instance...")
 	pcall(env.XXG_Cleanup)
 	env.XXG_Cleanup = nil
 	task.wait(0.5)
@@ -38,13 +37,13 @@ local function fetch(path)
 		end
 		task.wait(0.5)
 	end
-	error("gagal mengambil " .. path .. ": " .. tostring(src))
+	error("Failed to fetch " .. path .. ": " .. tostring(src))
 end
 
 local function preload(path)
-	log("ambil " .. path)
+	log("Fetching " .. path)
 	sources[path] = fetch(path)
-	task.wait() -- beri napas ke game di antara tiap request
+	task.wait()
 end
 
 local function import(path)
@@ -54,10 +53,10 @@ local function import(path)
 	return fn()
 end
 
+ -- Load
 local function main()
-	log("mulai")
+	log("Executing XXG Control Panel")
 
-	-- 1) unduh SEMUA file dulu, sebelum UI dibuat
 	preload("Config.lua")
 local Cfg = import("Config.lua")
 	preload("Lang/Strings.lua")
@@ -65,7 +64,6 @@ local Cfg = import("Config.lua")
 	for _, name in ipairs(Cfg.Modules) do preload("Modules/" .. name .. ".lua") end
 	log("semua file terunduh")
 
-	-- 2) baru bangun UI
 	local Strings = import("Lang/Strings.lua")
 	local UILibrary = import("Library/UI.lua")
 	local D = Cfg.Defaults
@@ -81,23 +79,22 @@ local Cfg = import("Config.lua")
 
 	local ctx = {UI = UI, Theme = UI.Theme, Cfg = Cfg, L = L, import = import, modules = {}, pages = {}}
 
-	-- muat modul sesuai urutan di Config. Modul yang error tidak mematikan modul lain.
 	for _, name in ipairs(Cfg.Modules) do
 		log("modul " .. name)
 		local ok, err = pcall(function() import("Modules/" .. name .. ".lua")(ctx) end)
 		if not ok then
 			log("modul " .. name .. " GAGAL: " .. tostring(err))
-			warn("[ControlPanel] modul " .. name .. " gagal: " .. tostring(err))
+			warn("[ControlPanel] modul " .. name .. " FAILED: " .. tostring(err))
 			UI:notify("Failed to load module: " .. name, "error")
 		end
-		task.wait() -- satu frame per modul, supaya tidak terjadi lonjakan beban
+		task.wait()
 	end
 
-	log("terapkan tema & bahasa")
+	log("Setting up Language & Theme")
 	UI:setTheme(D.Theme)
 	UI:setLanguage(D.Language)
 
-	-- saat panel di-close (tombol X): hentikan semua fitur & putuskan koneksi
+	-- Close Panel
 	UI.OnClose = function()
 		for _, m in pairs(ctx.modules) do
 			if m.prepareClose then pcall(m.prepareClose) end
@@ -109,7 +106,6 @@ local Cfg = import("Config.lua")
 		end
 	end
 
-	-- dipanggil otomatis kalau script dijalankan ulang
 	env.XXG_Cleanup = function() UI:Close() end
 
 	log("selesai")

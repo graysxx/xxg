@@ -13,9 +13,9 @@ return function(ctx)
 	local keybindSection = page:addSection("Keybinds")
 	local kbPanel = keybindSection:addKeybind("Toggle Panel", defaultKey, function()
 		UI:toggle()
-	end, nil, true) -- true = abaikan saat sedang mengetik di chat / textbox
+	end, nil, true) -- true = keybind notifies when pressed
 
-	-- tampilan: tema warna & transparansi background
+	-- appearance
 	local appearanceSection = page:addSection("Appearance")
 	local themeOptions = {}
 	for _, name in ipairs(UI.ThemeOrder) do
@@ -26,16 +26,16 @@ return function(ctx)
 		UI:setTheme(name)
 		if customPicker then customPicker:Set(UI.ThemePresets[name].Accent, true) end
 	end)
-	-- warna bebas: ring warna + input hex (klik panah untuk membuka)
+
 	customPicker = appearanceSection:addColorPicker("Custom Color", UI.ThemePresets[defaultTheme].Accent, function(color)
 		UI:setCustomTheme(color)
-		themeSwatches:Set(nil, true) -- tidak ada preset yang terpilih lagi
+		themeSwatches:Set(nil, true) 
 	end)
 	local bgSlider = appearanceSection:addSlider("Background Transparency", defaultTransparency, 0, 90, function(v)
 		UI:setBackgroundTransparency(v / 100)
 	end, "%")
 
-	-- bahasa
+	-- language
 	local languageSection = page:addSection("Language")
 	local langDrop = languageSection:addDropdown("Language", UI.Languages, function(name)
 		UI:setLanguage(name)
@@ -73,11 +73,11 @@ return function(ctx)
 		end)
 	end
 
-	-- reset: kembalikan semua pengaturan di tab Settings ke awal
+	-- reset
 	local resetSection = page:addSection("Reset")
 	resetSection:addButton("Reset Settings", function()
 		kbPanel:Set(defaultKey)
-		themeSwatches:Set(defaultTheme)       -- ikut mengembalikan tema
+		themeSwatches:Set(defaultTheme)    
 		customPicker:Set(UI.ThemePresets[defaultTheme].Accent, true)
 		bgSlider:Set(defaultTransparency)
 		langDrop:Set(defaultLanguage)

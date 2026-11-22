@@ -6,7 +6,7 @@ return function(ctx)
 	local LocalPlayer = Players.LocalPlayer
 	local miscPage = ctx.pages.Misc or UI:addPage("Misc")
 
-	local playerOrig = setmetatable({}, {__mode = "k"}) -- [Humanoid] = nilai asli
+	local playerOrig = setmetatable({}, {__mode = "k"}) -- [Humanoid] = real value
 	local walkEnabled, walkValue = false, 16
 	local jumpEnabled, jumpValue = false, 50
 	local gravEnabled, gravValue, origGravity = false, 196, workspace.Gravity
@@ -76,7 +76,7 @@ return function(ctx)
 		UI:notify("Gravity reset", "success")
 	end)
 
-	-- Fly (karakter)
+	-- Fly 
 	local flySection = miscPage:addSection("Fly")
 	flySection:addToggle("Enabled", false, function(v)
 		flyEnabled = v

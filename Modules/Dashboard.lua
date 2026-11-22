@@ -6,7 +6,7 @@ return function(ctx)
 
 	local page = UI:addPage("Dashboard")
 	ctx.pages.Dashboard = page
-	UI:SelectPage(page) -- langsung tampilkan Dashboard saat GUI muncul
+	UI:SelectPage(page) -- 
 
 	local heading = page:addHeading("Overview", "Dashboard", L("welcome", LocalPlayer.DisplayName))
 	UI:onLanguage(function() heading.Subtitle.Text = L("welcome", LocalPlayer.DisplayName) end)
@@ -25,14 +25,14 @@ return function(ctx)
 		Status = "Active",
 	})
 
-	-- profil yang tampil di bar saat panel di-minimize
+	-- minimize profile
 	UI:setMiniProfile({UserId = LocalPlayer.UserId, Name = LocalPlayer.Name, DisplayName = LocalPlayer.DisplayName})
 
 	if Cfg.News and #Cfg.News > 0 then
 		page:addNewsCard(Cfg.NewsTitle or "What's New", Cfg.News)
 	end
 
-	-- kartu versi (cek "terbaru / outdated" kalau Cfg.VersionURL diisi)
+	-- version
 	local versionCard = page:addVersionCard({
 		Version = Cfg.Version,
 		Updated = Cfg.Updated,
@@ -54,7 +54,7 @@ return function(ctx)
 		end)
 	end
 
-	-- timer Anti AFK (diisi oleh Modules/Misc.lua)
+	-- timer 
 	ctx.afk = {start = nil, info = nil}
 
 	local function fmtHMS(s)
@@ -62,7 +62,7 @@ return function(ctx)
 		return string.format("%02d:%02d:%02d", math.floor(s / 3600), math.floor(s % 3600 / 60), s % 60)
 	end
 
-	-- tampilkan timer Anti AFK di Misc dan bar minimize
+	-- populate stats
 	function ctx.updateAfkDisplay()
 		local afk = ctx.afk
 		if afk.start then
@@ -75,7 +75,7 @@ return function(ctx)
 		end
 	end
 
-	-- update statistik Dashboard
+	-- dasboard stats updater
 	local startTime = os.clock()
 	local frames, fpsTime, slowTime = 0, 0, 0
 	local function fmtTime(s)

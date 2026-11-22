@@ -5,9 +5,6 @@ return function(ctx)
 	local UserInputService = game:GetService("UserInputService")
 	local LocalPlayer = Players.LocalPlayer
 
-	-- ====================================================================
-	-- LOGIKA ASLI
-	-- ====================================================================
 	local function GetVehicleFromDescendant(Descendant)
 		return
 			Descendant:FindFirstAncestor(LocalPlayer.Name .. "\'s Car") or
@@ -28,9 +25,6 @@ return function(ctx)
 		end
 	end
 
-	-- ====================================================================
-	-- PAGE: VEHICLE
-	-- ====================================================================
 	local vehiclePage = UI:addPage("Vehicle")
 	ctx.pages.Vehicle = vehiclePage
 
@@ -116,9 +110,7 @@ return function(ctx)
 		UI:notify("Deceleration reset", "success")
 	end)
 
-	-- ====================================================================
-	-- HANDLING EDITOR (suspensi & setir) + GROUND SNAPPING
-	-- ====================================================================
+	-- HANDLING EDITOR 
 	local handlingEnabled = false
 	local suspStiffF, suspStiffR = 100, 100
 	local suspDampF, suspDampR = 100, 100
@@ -167,7 +159,7 @@ return function(ctx)
 			end
 		end
 
-		-- depan / belakang: posisi tiap pegas terhadap arah hadap kursi (depan = -Z), dibagi di titik tengah
+		-- front / rear
 		local zs, sum = {}, 0
 		for i, sp in ipairs(springs) do
 			local att = sp.Attachment0 or sp.Attachment1
@@ -185,7 +177,7 @@ return function(ctx)
 			axleOf[sp] = front and "front" or "rear"
 		end
 
-		-- servo yang bernama "steer" dipakai kalau ada; kalau tidak, semua servo dianggap setir
+		-- servo / hinge: steering
 		for _, hinge in ipairs(#steering > 0 and steering or servos) do
 			originals[hinge] = {AngularSpeed = hinge.AngularSpeed, ServoMaxTorque = hinge.ServoMaxTorque}
 		end
@@ -202,7 +194,7 @@ return function(ctx)
 		if not (seat and typeof(seat) == "Instance" and seat:IsA("VehicleSeat")) then seat = nil end
 		local vehicle = seat and GetVehicleFromDescendant(seat)
 
-		-- turun / ganti kendaraan: kembalikan nilai asli kendaraan sebelumnya
+		-- value return to default if player is not in vehicle
 		if handlingVehicle and vehicle ~= handlingVehicle then
 			restoreHandling()
 		end
@@ -242,7 +234,7 @@ return function(ctx)
 					end
 				end
 
-				-- bantuan belok
+				-- steering assist
 				if steerAssist > 0 and not UserInputService:GetFocusedTextBox() then
 					local steer = seat.SteerFloat
 					if steer == 0 then
@@ -291,7 +283,7 @@ return function(ctx)
 		end)
 	end)
 
-	-- ----- Handling Editor (card) -----
+	-- ----- Handling Editor -----
 	local handlingSection = vehiclePage:addSection("Handling Editor")
 	local stiffFSlider, stiffRSlider, dampFSlider, dampRSlider, respSlider, assistSlider, suspPreset, steerPreset
 	local applyingPreset = false
@@ -311,7 +303,6 @@ return function(ctx)
 
 	-- ----- Suspension -----
 	local suspSection = vehiclePage:addSection("Suspension")
-	-- urutan: {stiffness depan, stiffness belakang, damping depan, damping belakang} (% dari nilai asli)
 	local suspPresets = {
 		Soft   = {60, 60, 80, 80},
 		Normal = {100, 100, 100, 100},
@@ -336,7 +327,7 @@ return function(ctx)
 	dampRSlider = suspSection:addSlider("Rear Damping", 100, 25, 400, function(v) suspDampR = v; suspCustom() end, "%")
 	local swapToggle = suspSection:addToggle("Swap Front / Rear", false, function(v)
 		swapAxles = v
-		restoreHandling() -- hitung ulang depan / belakang di frame berikutnya
+		restoreHandling() -- Current vehicle rescanned to update front/rear assignment
 	end)
 	suspSection:addButton("Reset Suspension", function()
 		applyingPreset = true
@@ -402,9 +393,7 @@ return function(ctx)
 	end)
 	resetAllSection:addLabel("Resets all values to default. Toggle positions are not changed.")
 
-	-- ====================================================================
-	-- daftar ke ConfigManager (save/load) dan Main (close)
-	-- ====================================================================
+	-- (save/load) Main (close)
 	ctx.modules.vehicle = {
 		collect = function()
 			return {
@@ -441,13 +430,13 @@ return function(ctx)
 			if type(d.brakeEnabled) == "boolean" then brakeToggle:Set(d.brakeEnabled) end
 		end,
 		prepareClose = function()
-			flightEnabled = false      -- biar karakter dikembalikan ke parent semula
+			flightEnabled = false   
 			accelEnabled = false; brakeEnabled = false
 		end,
 		shutdown = function()
 			handlingEnabled = false
 			snapEnabled = false
-			restoreHandling()          -- kembalikan suspensi & setir ke nilai asli
+			restoreHandling() 
 			handlingConnection:Disconnect()
 			flightConnection:Disconnect()
 			driveConnection:Disconnect()

@@ -5,10 +5,9 @@ return function(ctx)
 	local entry = Cfg.Games and Cfg.Games[game.PlaceId]
 	if not entry then return end
 
-	-- fitur khusus per game: tambah fungsi baru di sini, lalu isi Feature = "Nama" di Config.lua
 	local features = {
 		DrivingEmpire = function(page)
-			-- dijalankan di thread terpisah supaya menunggu workspace tidak menahan modul lain
+
 			task.spawn(function()
 				local ok, err = pcall(function()
 					local section = page:addSection("Vehicle Dealership")

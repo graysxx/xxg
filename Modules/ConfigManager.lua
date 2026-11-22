@@ -2,10 +2,10 @@ return function(ctx)
 	local UI, L, Cfg = ctx.UI, ctx.L, ctx.Cfg
 	local page = ctx.pages.Settings
 	local HttpService = game:GetService("HttpService")
-	local ROOT_DIR = Cfg.ConfigFolder or "ProjectControlPanel"
+	local ROOT_DIR = Cfg.ConfigFolder or "XXGControlPanel"
 	local CONFIG_DIR = ROOT_DIR .. "/configs"
 	local fsOk = (writefile and readfile and isfolder and makefolder and listfiles and delfile) and true or false
-	local configNames = {}   -- dipakai langsung oleh dropdown (isinya diubah di tempat)
+	local configNames = {} 
 	local selectedDelete
 
 	local function cfgPath(name) return CONFIG_DIR .. "/" .. name .. ".json" end
@@ -40,7 +40,6 @@ return function(ctx)
 		end)
 	end
 
-	-- kumpulkan nilai dari semua modul yang mendaftar collect/apply
 	local function collectConfig()
 		local data = {}
 		for name, m in pairs(ctx.modules) do
@@ -53,7 +52,6 @@ return function(ctx)
 		for name, m in pairs(ctx.modules) do
 			if m.apply then
 				local part = d[name]
-				-- config lama (format datar): isinya data vehicle + playerValues
 				if part == nil and name == "vehicle" and d.vehicle == nil then part = d end
 				if part == nil and name == "player" then part = d.playerValues end
 				if type(part) == "table" then pcall(m.apply, part) end
@@ -106,7 +104,6 @@ return function(ctx)
 		selectedDelete = name
 	end)
 	configSection:addButton("Delete Config", function()
-		-- pakai pilihan terakhir, atau teks yang tampil di dropdown kalau cocok dengan config yang ada
 		local name = selectedDelete
 		if not (name and table.find(configNames, name)) then
 			local typed = delDrop:Get()
@@ -118,10 +115,9 @@ return function(ctx)
 		end
 		local path = cfgPath(name)
 		local ok = pcall(function() delfile(path) end)
-		if ok and isfile and isfile(path) then ok = false end -- pastikan file benar-benar hilang
+		if ok and isfile and isfile(path) then ok = false end
 
 		if ok then
-			-- buang langsung dari daftar, tidak menunggu listfiles
 			local idx = table.find(configNames, name)
 			while idx do
 				table.remove(configNames, idx)
@@ -134,7 +130,7 @@ return function(ctx)
 		selectedDelete = nil
 		delDrop:Set(""); loadDrop:Set("")
 		delDrop:Refresh(); loadDrop:Refresh()
-		task.delay(0.15, function() -- bangun ulang sekali lagi supaya pasti bersih
+		task.delay(0.15, function() 
 			delDrop:Refresh(); loadDrop:Refresh()
 		end)
 

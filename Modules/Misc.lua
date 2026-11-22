@@ -23,7 +23,7 @@ return function(ctx)
 	local afkSection = page:addSection("Anti AFK")
 	afkSection:addToggle("Anti AFK", false, function(v)
 		setAntiAfk(v)
-		ctx.afk.start = v and os.clock() or nil -- timer dihitung sejak dinyalakan
+		ctx.afk.start = v and os.clock() or nil 
 		ctx.updateAfkDisplay()
 	end)
 	ctx.afk.info = afkSection:addInfo("Active time", "--:--:--")

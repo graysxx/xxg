@@ -1,24 +1,3 @@
---[[
-	Library/UI.lua - UI library (dashboard style)
-	API:
-		library.new(title, subtitle, version)
-		library:addPage(name)                    -> page
-		page:addSection(name)                    -> section
-		section:addToggle / addSlider / addKeybind / addButton / addDropdown / addLabel / addTextBox
-	Dashboard:
-		page:addHeading / addStats / addAccountCard / addNewsCard
-		section:addInfo(title, value)  |  section:addSwatches(title, options, default, callback)
-		library:setMiniProfile(info) / setMini(key, value, color)   -- key: ping | fps | afk
-		library:setTheme(name) / setCustomTheme(color3) / setBackgroundTransparency(0..1)
-		library:notify(text, "success" | "error" | "info")  |  section:addColorPicker(title, default, callback)
-		page:addVersionCard(info)
-	Language:
-		library:addStrings({{"English", "Indonesia"}, ...}) / setLanguage(name) / getLanguage() / onLanguage(fn) / tr(text)
-	Window:
-		library:toggle() / Minimize() / Maximize() / Close()
-		library.OnClose = function() ... end   -- dipanggil sebelum GUI dihapus
-]]
-
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
@@ -27,7 +6,7 @@ local TextService = game:GetService("TextService")
 
 local LocalPlayer = Players.LocalPlayer
 
------------------------------------------------------------------- THEME
+-- THEME
 local Theme = {
 	Background = Color3.fromRGB(11, 11, 14),
 	Panel      = Color3.fromRGB(23, 24, 28),
@@ -48,8 +27,6 @@ local Theme = {
 	Red        = Color3.fromRGB(239, 68, 68),
 }
 
--- Preset tema: hanya warna aksen yang berganti (Background/Panel/dll tetap).
--- Setiap preset sengaja memakai warna yang berbeda dari Green/Orange/Blue/Red supaya tidak tertukar.
 local ThemePresets = {
 	White   = {Accent = Color3.fromRGB(255, 255, 255), AccentSoft = Color3.fromRGB(46, 47, 54),  AccentLine = Color3.fromRGB(110, 112, 124)},
 	Violet  = {Accent = Color3.fromRGB(167, 139, 250), AccentSoft = Color3.fromRGB(44, 38, 82),  AccentLine = Color3.fromRGB(88, 74, 160)},
@@ -61,7 +38,7 @@ local ThemePresets = {
 local ThemeOrder = {"White", "Violet", "Ocean", "Emerald", "Rose", "Amber"}
 local THEME_KEYS = {"Background", "Panel", "PanelHover", "Card", "Border", "TrackOff", "Accent", "AccentSoft", "AccentLine"}
 
------------------------------------------------------------------- HELPERS
+-- HELPERS
 local function create(className, props, children)
 	local obj = Instance.new(className)
 	local parent
@@ -139,8 +116,6 @@ local function newLabel(props)
 	return create("TextLabel", p)
 end
 
--- Permukaan yang ikut pengaturan "Background Transparency".
--- factor 1 = ikut penuh (window, header, kartu); 0.5 = setengahnya (baris di dalam kartu)
 local Surfaces, SurfaceAlpha, themeHooks = {}, 0, {}
 
 local function surface(obj, factor)
@@ -154,8 +129,6 @@ local function colorKey(c)
 	return math.floor(c.R * 255 + 0.5) * 65536 + math.floor(c.G * 255 + 0.5) * 256 + math.floor(c.B * 255 + 0.5)
 end
 
--- gradient slider: sedikit lebih gelap di kiri, sedikit lebih terang di kanan.
--- Kalau aksen sangat terang (mis. putih), isi slider dibuat abu supaya angka putihnya terbaca.
 local function accentGradient()
 	local a = Theme.Accent
 	if 0.299 * a.R + 0.587 * a.G + 0.114 * a.B > 0.8 then
@@ -168,7 +141,7 @@ local function accentOutline()
 	return Theme.Accent:Lerp(Color3.new(1, 1, 1), 0.35)
 end
 
--- background panel (ZIndex 0) yang bisa "membesar" saat di-hover
+-- background panel (ZIndex 0)
 local function panelBg(parent)
 	return surface(create("Frame", {
 		Name = "Bg", Size = UDim2.new(1, 0, 1, 0), BackgroundColor3 = Theme.Panel,
@@ -176,7 +149,7 @@ local function panelBg(parent)
 	}, {corner(12), stroke()}), 1)
 end
 
--- ===== icon outline sederhana (digambar dari Frame, tanpa asset) =====
+-- icon outline 
 local function line(parent, x1, y1, x2, y2, thick, color)
 	local dx, dy = x2 - x1, y2 - y1
 	local len = math.sqrt(dx * dx + dy * dy)
@@ -189,7 +162,6 @@ local function line(parent, x1, y1, x2, y2, thick, color)
 	}, {corner(thick / 2)})
 end
 
--- nama: signal, chart, users, user, news, info, clock, check, cross  (koordinat dasar 16x16)
 local function makeIcon(name, parent, color, px)
 	local k = px / 16
 	local th = math.max(1.4, 1.6 * k)
@@ -208,7 +180,7 @@ local function makeIcon(name, parent, color, px)
 		end
 		return c
 	end
-	local function shoulders(cx, top, w) -- busur bahu = setengah lingkaran bagian atas
+	local function shoulders(cx, top, w) 
 		local clip = create("Frame", {
 			Position = UDim2.new(0, (cx - w / 2) * k - th, 0, top * k - th),
 			Size = UDim2.new(0, w * k + 2 * th, 0, (w / 2) * k + th),
@@ -251,9 +223,6 @@ local function makeIcon(name, parent, color, px)
 	return f
 end
 
--- Kartu yang "pop" (membesar dari tengah) saat di-hover:
---   slot = frame yang diatur layout (ukurannya ditentukan engine halaman)
---   pop  = kartu di dalam slot, berpusat, di-scale lewat UIScale
 local function popCard(parent, name)
 	local slot = create("Frame", {
 		Name = name or "Card", Size = UDim2.new(1, 0, 0, 80), BackgroundTransparency = 1, BorderSizePixel = 0, Parent = parent,
@@ -268,9 +237,9 @@ local function popCard(parent, name)
 end
 
 local AUTO_Y = Enum.AutomaticSize.Y
-local HOVER_SCALE = 1.03 -- seberapa besar kartu membesar saat di-hover
+local HOVER_SCALE = 1.03 
 
------------------------------------------------------------------- CLASSES
+-- CLASSES
 local library = {}
 local page = {}
 local section = {}
@@ -323,17 +292,16 @@ local function windowButton(parent, x, hoverColor)
 	return b
 end
 
------------------------------------------------------------------- WINDOW
+-- WINDOW
 local MIN_W, MIN_H = 320, 260
 local MINI_BAR_H = 48
-local MINIMIZED_H = MINI_BAR_H + 20 -- tinggi window saat minimize
-local CHIP_PAD, CHIP_ICON, CHIP_GAP = 8, 14, 6 -- ukuran chip di bar minimize
+local MINIMIZED_H = MINI_BAR_H + 20 
+local CHIP_PAD, CHIP_ICON, CHIP_GAP = 8, 14, 6 
 
 function library.new(title, subtitle, version)
 	local guiName = "ProjectControlPanel"
 	Surfaces, SurfaceAlpha, themeHooks = {}, 0, {}
 
-	-- hapus GUI lama kalau script dijalankan ulang
 	pcall(function()
 		local old = game:GetService("CoreGui"):FindFirstChild(guiName)
 		if old then old:Destroy() end
@@ -358,7 +326,7 @@ function library.new(title, subtitle, version)
 	local vp = cam and cam.ViewportSize or Vector2.new(1280, 720)
 	local W, H = math.min(440, vp.X - 20), math.min(580, vp.Y - 20)
 
-	-- Root = posisi & ukuran window. Main (di dalamnya) yang di-scale untuk animasi pop.
+	-- Root
 	local root = create("Frame", {
 		Name = "Root",
 		Position = UDim2.fromOffset(math.floor((vp.X - W) / 2), math.floor((vp.Y - H) / 2)),
@@ -420,7 +388,7 @@ function library.new(title, subtitle, version)
 		TextSize = 11, TextColor3 = Theme.Muted, TextTruncate = Enum.TextTruncate.AtEnd, Parent = header,
 	})
 
-	-- badge versi (di kiri tombol window)
+	-- badge 
 	local badge = newLabel({
 		Name = "Version", Text = version or "v1.0.0",
 		AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -92, 0, 7),
@@ -433,7 +401,7 @@ function library.new(title, subtitle, version)
 	padding(8, 0, 8, 0).Parent = badge
 	stroke(Theme.AccentLine).Parent = badge
 
-	-- tombol window: minimize, maximize, close
+	--minimize, maximize, close
 	local controls = create("Frame", {
 		Name = "Controls", AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -12, 0, 15),
 		Size = UDim2.new(0, 80, 0, 24), BackgroundTransparency = 1, ZIndex = 5, Parent = main,
@@ -442,15 +410,15 @@ function library.new(title, subtitle, version)
 	local maxBtn = windowButton(controls, 28, Theme.Card)
 	local closeBtn = windowButton(controls, 56, Theme.Red)
 
-	create("Frame", { -- ikon minimize
+	create("Frame", { -- minimize
 		AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 0, 0.5, 3), Size = UDim2.new(0, 10, 0, 2),
 		BackgroundColor3 = Theme.SubText, BorderSizePixel = 0, Parent = minBtn,
 	}, {corner(1)})
-	create("Frame", { -- ikon maximize
+	create("Frame", { -- maximize
 		AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 0, 0.5, 0), Size = UDim2.new(0, 10, 0, 10),
 		BackgroundTransparency = 1, BorderSizePixel = 0, Parent = maxBtn,
 	}, {corner(2), create("UIStroke", {Color = Theme.SubText, Thickness = 1.5, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})})
-	for _, rot in ipairs({45, -45}) do -- ikon close (X)
+	for _, rot in ipairs({45, -45}) do -- close
 		create("Frame", {
 			AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 0, 0.5, 0), Size = UDim2.new(0, 12, 0, 2),
 			Rotation = rot, BackgroundColor3 = Theme.SubText, BorderSizePixel = 0, Parent = closeBtn,
@@ -475,7 +443,7 @@ function library.new(title, subtitle, version)
 		}),
 	})
 
-	-- bar mini (tampil saat minimize): profil akun + ping + fps (+ timer Anti AFK)
+	-- mini bar
 	local mini = create("Frame", {
 		Name = "Mini", Size = UDim2.new(1, 0, 0, MINI_BAR_H), BackgroundColor3 = Theme.Panel,
 		BorderSizePixel = 0, Visible = false, Parent = main,
@@ -503,7 +471,7 @@ function library.new(title, subtitle, version)
 		end)
 		return ok and math.ceil(size.X) or (#sample * 8)
 	end
-	-- chip = icon (sama seperti di kartu Dashboard) + nilai. Lebar tetap sesuai contoh teks terpanjang.
+	-- chip = icon 
 	local function addChip(key, iconName, iconColor, sample, order, visible)
 		local width = CHIP_PAD * 2 + CHIP_ICON + CHIP_GAP + textWidth(sample)
 		local chip = create("Frame", {
@@ -519,7 +487,7 @@ function library.new(title, subtitle, version)
 	end
 	addChip("ping", "signal", Theme.Green, "999 ms", 1, true)
 	addChip("fps", "chart", Theme.Accent, "999 FPS", 2, true)
-	addChip("afk", "clock", Theme.Blue, "00:00:00", 3, false) -- hanya muncul kalau Anti AFK menyala
+	addChip("afk", "clock", Theme.Blue, "00:00:00", 3, false) 
 
 	local body = create("Frame", {
 		Name = "Body", Position = UDim2.new(0, 0, 0, 118), Size = UDim2.new(1, 0, 1, -118),
@@ -542,16 +510,16 @@ function library.new(title, subtitle, version)
 		end
 	end)
 
-	-- tombol window
+	-- window
 	closeBtn.MouseButton1Click:Connect(function() task.spawn(function() self:Close() end) end)
 	minBtn.MouseButton1Click:Connect(function() self:Minimize() end)
 	maxBtn.MouseButton1Click:Connect(function() self:Maximize() end)
 
-	-- drag lewat header
+	-- header
 	makeDraggable(self, header, root)
 	makeDraggable(self, mini, root)
 
-	-- wadah popup notifikasi (toast), di atas segalanya
+	-- 
 	self.toasts = create("Frame", {
 		Name = "Toasts", AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 18),
 		Size = UDim2.new(0, 300, 1, -18), BackgroundTransparency = 1, ZIndex = 50, Parent = screen,
@@ -559,7 +527,7 @@ function library.new(title, subtitle, version)
 		SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 8), HorizontalAlignment = Enum.HorizontalAlignment.Center,
 	})})
 
-	-- resize lewat pinggir / sudut window
+	-- resize
 	local T, C = 6, 14
 	local handleDefs = {
 		{Vector2.new(0, 0), UDim2.new(0, 0, 0, C),  UDim2.new(0, T, 1, -2 * C), -1,  0},
@@ -612,7 +580,7 @@ function library.new(title, subtitle, version)
 		end)
 	end
 
-	-- hover efek pada panel
+	-- hover 
 	self:connect(RunService.Heartbeat, function()
 		self:_updateHover()
 		local p = self.focusedPage
@@ -621,18 +589,15 @@ function library.new(title, subtitle, version)
 		end
 	end)
 
-	-- responsif: header menyesuaikan lebar window
 	root:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() self:_applyResponsive() end)
 	self:_applyResponsive()
 
-	-- animasi pop saat dibuka
 	self:_animate(true)
 
 	return self
 end
 
------------------------------------------------------------------- WINDOW BEHAVIOR
--- true kalau obj (dan semua induknya sampai stopAt) tidak ditandai NoTheme
+-- WINDOW BEHAVIOR
 local function isThemed(obj, stopAt)
 	local p = obj
 	while p and p ~= stopAt do
@@ -642,7 +607,6 @@ local function isThemed(obj, stopAt)
 	return true
 end
 
--- Ganti tema: nilai Theme diganti, lalu semua warna lama di GUI dipetakan ke warna baru.
 function library:setTheme(name)
 	local preset = ThemePresets[name]
 	if not preset then return end
@@ -681,14 +645,13 @@ function library:setTheme(name)
 	self.themeName = name
 end
 
--- Tema warna bebas dari satu warna aksen (Color3).
 function library:setCustomTheme(color)
 	local taken = {}
 	for _, k in ipairs({"Background", "Panel", "PanelHover", "Card", "Border", "TrackOff", "Text", "SubText", "Muted",
 		"Green", "GreenSoft", "Orange", "Blue", "Red"}) do
 		taken[colorKey(Theme[k])] = true
 	end
-	-- hindari warna yang sama persis dengan warna non-aksen (supaya pemetaan warna tidak tertukar)
+
 	local function unique(c)
 		for _ = 1, 8 do
 			if not taken[colorKey(c)] then break end
@@ -705,7 +668,7 @@ function library:setCustomTheme(color)
 	self:setTheme("Custom")
 end
 
--- a = 0 (solid) .. 1 (transparan penuh)
+-- a = 0 
 function library:setBackgroundTransparency(a)
 	a = math.clamp(a, 0, 1)
 	SurfaceAlpha = a
@@ -714,7 +677,7 @@ function library:setBackgroundTransparency(a)
 	end
 end
 
------------------------------------------------------------------- LANGUAGE
+-- LANGUAGE
 library.Languages = {"English", "Indonesia"}
 local langCodes = {English = "en", Indonesia = "id"}
 local langLookup, langHooks, currentLang = {}, {}, "en"
@@ -723,10 +686,10 @@ local function indexText(t, entry)
 	if type(t) ~= "string" then return end
 	langLookup[t] = langLookup[t] or {e = entry, up = false}
 	local u = string.upper(t)
-	langLookup[u] = langLookup[u] or {e = entry, up = true} -- judul card / label huruf kapital
+	langLookup[u] = langLookup[u] or {e = entry, up = true} 
 end
 
--- list = {{"English", "Indonesia"}, ...}
+-- list 
 function library:addStrings(list)
 	for _, t in ipairs(list) do
 		local e = {en = t.en or t[1], id = t.id or t[2]}
@@ -762,7 +725,7 @@ function library:setLanguage(name)
 	for _, hook in ipairs(langHooks) do pcall(hook, code) end
 end
 
--- Popup notifikasi. kind: "success" (centang hijau) | "error" | "info"
+-- Popup 
 function library:notify(text, kind)
 	if self.closing then return end
 	kind = kind or "success"
@@ -813,7 +776,6 @@ function library:_refreshCanvas()
 	end
 end
 
--- lebar window (px) sesuai ukuran yang di-set, tidak terpengaruh animasi pop
 function library:_width()
 	return self.root.Size.X.Offset
 end
@@ -895,7 +857,7 @@ function library:_setMiniMode(on)
 	self.controls.Position = on and UDim2.new(1, -10, 0, 12) or UDim2.new(1, -12, 0, 15)
 end
 
--- data bar mini: info = {UserId, Name, DisplayName}
+-- data bar mini
 function library:setMiniProfile(info)
 	self.miniName.Text = info.DisplayName or "DisplayName"
 	self.miniDisplay.Text = "@" .. (info.Name or "Username")
@@ -906,7 +868,7 @@ function library:setMiniProfile(info)
 	end)
 end
 
--- key: "ping" | "fps" | "afk"; value = nil -> sembunyikan chip (lebar bar ikut menyesuaikan)
+-- key: "ping" | "fps" | "afk"
 function library:setMini(key, value, color)
 	local chip = self.chips[key]
 	if not chip then return end
@@ -921,7 +883,6 @@ function library:setMini(key, value, color)
 	if wasVisible ~= chip.frame.Visible then self:_resizeMini() end
 end
 
--- lebar bar minimize = hanya chip yang sedang tampil (tanpa sisa ruang kosong)
 function library:_miniWidth()
 	local total, count = 0, 0
 	for _, c in pairs(self.chips) do
@@ -931,7 +892,7 @@ function library:_miniWidth()
 		end
 	end
 	if count > 1 then total = total + 6 * (count - 1) end
-	return total + 284 -- avatar + nama + tombol window + padding
+	return total + 284 
 end
 
 function library:_resizeMini(basePos)
@@ -948,7 +909,7 @@ function library:Minimize()
 	if self.closing then return end
 	self._geoToken = self._geoToken + 1
 
-	if self.state == "minimized" then -- kembalikan
+	if self.state == "minimized" then 
 		self.state = "normal"
 		self:_setMiniMode(false)
 		self:_goTo(self.normalSize, self.normalPos)
@@ -967,7 +928,7 @@ function library:Maximize()
 	if self.closing then return end
 	self._geoToken = self._geoToken + 1
 
-	if self.state == "maximized" then -- kembalikan
+	if self.state == "maximized" then 
 		self.state = "normal"
 		self:_goTo(self.normalSize, self.normalPos)
 		self:_setHandles(true)
@@ -983,7 +944,7 @@ function library:Maximize()
 	self:_goTo(UDim2.fromOffset(w, h), UDim2.fromOffset(math.floor((vp.X - w) / 2), math.floor((vp.Y - h) / 2)))
 end
 
------------------------------------------------------------------- HOVER
+-- HOVER
 function library:_registerHover(card, bg, pg, pop)
 	table.insert(self._hovers, {
 		card = card, bg = bg, stroke = bg:FindFirstChildOfClass("UIStroke"), page = pg,
@@ -994,7 +955,6 @@ end
 local function setHover(h, hot)
 	local quad = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 	if h.scale then
-		-- membesar sedikit dari tengah dengan efek "pop", lalu kembali halus
 		local ti = hot and TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out) or quad
 		TweenService:Create(h.scale, ti, {Scale = hot and HOVER_SCALE or 1}):Play()
 	end
@@ -1022,7 +982,7 @@ function library:_updateHover()
 	end
 end
 
------------------------------------------------------------------- PAGES
+-- PAGES
 function library:addPage(title)
 	local p = page.new(self, title)
 	table.insert(self.pages, p)
@@ -1096,7 +1056,7 @@ function page.new(lib, title)
 		tween(button.Stroke, {Transparency = 1}, 0.12)
 	end)
 
-	-- "Flow" = tempat semua kartu. Isinya kolom-kolom yang jumlahnya mengikuti lebar window.
+	-- "Flow"
 	self.flow = create("Frame", {
 		Name = "Flow", Size = UDim2.new(1, 0, 0, 0), AutomaticSize = AUTO_Y, BackgroundTransparency = 1,
 		LayoutOrder = 1000000, Parent = container,
@@ -1120,16 +1080,12 @@ local function measureOf(it, inv)
 	return m or 0
 end
 
--- full = true  -> selebar halaman (heading, grid statistik)
--- full = false -> kartu yang masuk kolom & ikut melebar / memanjang mengisi ruang
--- measure      -> Frame (tinggi natural = AbsoluteSize.Y) atau angka tinggi tetap
 function page:_register(frame, full, measure)
 	local it = {frame = frame, full = full and true or false, measure = measure}
 	table.insert(self.items, it)
 	if it.full then
 		frame:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() self._dirty = true end)
 	else
-		-- taruh di kolom yang paling pendek
 		local colH = {}
 		for c = 1, #self.columns do colH[c] = 0 end
 		for _, other in ipairs(self.flowItems) do
@@ -1179,32 +1135,26 @@ function page:_setColumns(n)
 	self._dirty = true
 end
 
--- Dipanggil saat ukuran window / isi berubah. Return true kalau layout sudah stabil.
 function page:_relayout()
 	local lib = self.library
 	local rw = lib.root.AbsoluteSize.X
 	if rw <= 0 then return false end
-	local k = lib.main.AbsoluteSize.X / rw -- skala efektif saat animasi pop (1 = normal)
+	local k = lib.main.AbsoluteSize.X / rw 
 	if k < 0.15 then return false end
 	local inv = 1 / k
-	-- ukuran area halaman diambil dari ukuran window (bukan terpengaruh animasi)
 	local w = lib.root.Size.X.Offset - 20
 	local vh = lib.root.Size.Y.Offset - 138
 	if w <= 0 or vh <= 0 then return false end
 
-	-- 1) grid statistik: jumlah kolom
 	for _, f in ipairs(self._updaters) do f(w - 18) end
 
-	-- 2) jumlah kolom kartu (1 / 2 / 3)
 	local cols = math.clamp(math.floor((w - 8) / 310), 1, math.max(1, #self.flowItems))
 	if cols ~= self.cols then
 		self:_setColumns(cols)
-		return false -- ukur ulang di frame berikutnya
+		return false
 	end
 
-	-- 3) isi ruang kosong secara vertikal: semua kolom disamakan tingginya,
-	--    sisa ruang dibagi rata ke kartu-kartu di kolom itu
-	local used = 14 -- padding atas + bawah halaman
+	local used = 14
 	for _, it in ipairs(self.items) do
 		if it.full then used = used + it.frame.AbsoluteSize.Y * inv + 10 end
 	end
@@ -1249,7 +1199,7 @@ function page:addSection(title)
 	return s
 end
 
--- ===== komponen khusus Dashboard =====
+-- components
 function page:addHeading(overline, title, subtitle)
 	local f = create("Frame", {
 		Name = "Heading", Size = UDim2.new(1, 0, 0, 0), AutomaticSize = AUTO_Y,
@@ -1265,7 +1215,7 @@ function page:addHeading(overline, title, subtitle)
 	return {Instance = f, Subtitle = sub}
 end
 
--- defs: {{Key, Title, Color, Value, Status, StatusColor}, ...}
+-- defs: {{Key, Title, Color, Value, Status, StatusColor}
 function page:addStats(defs)
 	local n = #defs
 	local GAP, CELL_H = 10, 84
@@ -1307,7 +1257,7 @@ function page:addStats(defs)
 				if v ~= nil then
 					v = tostring(v)
 					value.Text = v
-					value.TextSize = (#v > 11) and 16 or 21 -- teks panjang (mis. nama negara) dikecilkan
+					value.TextSize = (#v > 11) and 16 or 21 
 				end
 				if s ~= nil then status.Text = self.library:tr(s) end
 				if c ~= nil then status.TextColor3 = c end
@@ -1315,7 +1265,6 @@ function page:addStats(defs)
 		}
 	end
 
-	-- susun kartu: jumlah kolom mengikuti lebar; baris terakhir melebar mengisi sisa ruang (tanpa kartu yatim)
 	local lastCols = 0
 	local function arrange(w)
 		local best = 1
@@ -1339,7 +1288,6 @@ function page:addStats(defs)
 	return result
 end
 
--- info: {UserId, Name, DisplayName, Status}
 function page:addAccountCard(info)
 	local card, pop, bg = popCard(self.container, "Account")
 	local inner = create("Frame", {
@@ -1381,7 +1329,6 @@ function page:addAccountCard(info)
 	return card
 end
 
--- items: {{Kind="update"|"news", Date, Title, Text}, ...}
 function page:addNewsCard(title, items)
 	local card, pop, bg = popCard(self.container, "News")
 	local content = create("Frame", {
@@ -1424,7 +1371,6 @@ function page:addNewsCard(title, items)
 	return card
 end
 
--- info: {Version, Updated, Status, StatusColor}  -> kartu:SetStatus(teks, warna)
 function page:addVersionCard(info)
 	local card, pop, bg = popCard(self.container, "Version")
 	local content = create("Frame", {
@@ -1459,7 +1405,7 @@ function page:addVersionCard(info)
 	end}
 end
 
------------------------------------------------------------------- SECTION
+-- SECTION
 function section.new(pg, title)
 	local card, pop, bg = popCard(pg.container, title)
 	local content = create("Frame", {
@@ -1496,7 +1442,6 @@ function section:addLabel(text)
 	})
 end
 
--- baris info: judul di kiri, nilai di kanan. info:Set(teks, warnaOpsional)
 function section:addInfo(title, value)
 	local row = newRow(self, 36, "Frame", {Name = "Info"})
 	newLabel({Text = title, Position = UDim2.new(0, 12, 0, 0), Size = UDim2.new(0.5, -12, 1, 0),
@@ -1510,7 +1455,6 @@ function section:addInfo(title, value)
 	end}
 end
 
--- Picker warna: ring hue + kotak saturasi/kecerahan + input hex. callback(Color3) dipanggil saat berubah.
 function section:addColorPicker(title, default, callback)
 	local lib = self.library
 	local color = default or Theme.Accent
@@ -1544,7 +1488,7 @@ function section:addColorPicker(title, default, callback)
 		AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -114, 0.5, 0), Size = UDim2.new(0, 18, 0, 18),
 		BackgroundColor3 = color, BorderSizePixel = 0, Parent = head,
 	}, {corner(9), stroke(Theme.Border)})
-	preview:SetAttribute("NoTheme", true) -- warna pilihan user, jangan ikut dipetakan saat tema berubah
+	preview:SetAttribute("NoTheme", true)
 
 	local panel = surface(create("Frame", {
 		Position = UDim2.new(0, 0, 0, 40), Size = UDim2.new(1, 0, 0, PANEL_H),
@@ -1557,7 +1501,6 @@ function section:addColorPicker(title, default, callback)
 	})
 	wheel:SetAttribute("NoTheme", true)
 
-	-- ring hue: 90 potongan kecil yang diputar mengelilingi pusat
 	for i = 0, N - 1 do
 		local ang = (i + 0.5) / N * 2 * math.pi
 		create("Frame", {
@@ -1568,7 +1511,6 @@ function section:addColorPicker(title, default, callback)
 		})
 	end
 
-	-- kotak saturasi (kiri->kanan) & kecerahan (atas->bawah)
 	local sq = create("Frame", {
 		AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0, D / 2, 0, D / 2), Size = UDim2.new(0, SQ, 0, SQ),
 		BackgroundColor3 = Color3.fromHSV(h, 1, 1), BorderSizePixel = 0, Parent = wheel,
@@ -1610,7 +1552,7 @@ function section:addColorPicker(title, default, callback)
 	local function fire(force)
 		if not callback then return end
 		local now = os.clock()
-		if force or now - lastFire > 0.12 then -- dibatasi supaya tidak berat saat di-drag
+		if force or now - lastFire > 0.12 then 
 			lastFire = now
 			task.spawn(callback, color)
 		end
@@ -1656,7 +1598,6 @@ function section:addColorPicker(title, default, callback)
 		end
 	end)
 
-	-- input hex: #RRGGBB, RRGGBB, atau #RGB
 	hexBox.FocusLost:Connect(function()
 		local txt = hexBox.Text:gsub("[#%s]", "")
 		if #txt == 3 then
@@ -1688,7 +1629,6 @@ function section:addColorPicker(title, default, callback)
 	return api
 end
 
--- Baris pilihan warna (bulat). options = {{Name, Color}, ...}; callback(nama)
 function section:addSwatches(title, options, default, callback)
 	local selected = default
 	local row = newRow(self, 44, "Frame", {Name = "Swatches"})
@@ -1717,7 +1657,7 @@ function section:addSwatches(title, options, default, callback)
 			Color = Color3.fromRGB(150, 150, 165), Thickness = 2, Transparency = 1,
 			ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Parent = btn,
 		})
-		btn:SetAttribute("NoTheme", true) -- jangan ikut diganti saat tema berubah
+		btn:SetAttribute("NoTheme", true) 
 		st:SetAttribute("NoTheme", true)
 		buttons[opt.Name] = {btn = btn, stroke = st}
 		btn.MouseButton1Click:Connect(function()
@@ -1728,7 +1668,7 @@ function section:addSwatches(title, options, default, callback)
 	end
 	render()
 	local api = {Instance = row}
-	function api:Set(name, silent) -- name = nil -> tampil "Custom"
+	function api:Set(name, silent) 
 		selected = name
 		render()
 		if name and not silent and callback then task.spawn(callback, name) end
@@ -1751,7 +1691,6 @@ function section:addButton(title, callback)
 	return btn
 end
 
--- Kotak input teks. api:Get() / api:Set(teks). callback(teks, enterDitekan) dipanggil saat fokus lepas.
 function section:addTextBox(title, placeholder, callback)
 	local row = newRow(self, 36, "Frame", {Name = "TextBox"})
 	newLabel({Text = title, Position = UDim2.new(0, 12, 0, 0), Size = UDim2.new(0.4, -12, 1, 0),
@@ -1784,7 +1723,6 @@ function section:addToggle(title, default, callback)
 		BackgroundColor3 = Theme.Text, BorderSizePixel = 0, Parent = track,
 	}, {corner(7)})
 
-	-- knob jadi gelap kalau toggle menyala di atas aksen yang sangat terang (mis. putih)
 	local function knobColor()
 		local a = Theme.Accent
 		local light = 0.299 * a.R + 0.587 * a.G + 0.114 * a.B > 0.75
@@ -1812,8 +1750,6 @@ function section:addToggle(title, default, callback)
 	return api
 end
 
--- Slider kotak-membulat dengan isi gradient, outline, dan angka di dalamnya.
--- Klik 2x pada slider untuk mengetik angka. suffix (opsional) mis. "%".
 function section:addSlider(title, default, min, max, callback, suffix)
 	suffix = suffix or ""
 	local value = math.clamp(default or min, min, max)
@@ -1839,7 +1775,7 @@ function section:addSlider(title, default, min, max, callback, suffix)
 		grad.Color = accentGradient()
 		fillStroke.Color = accentOutline()
 	end)
-	fill:SetAttribute("NoTheme", true) -- warna isi diatur lewat gradient, jangan ikut dipetakan
+	fill:SetAttribute("NoTheme", true)
 
 	local box = create("TextBox", {
 		Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, Font = Enum.Font.GothamBold, TextSize = 12,
@@ -1872,7 +1808,7 @@ function section:addSlider(title, default, min, max, callback, suffix)
 	hit.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 			local now = os.clock()
-			if now - lastClick < 0.35 then -- klik 2x -> ketik angka
+			if now - lastClick < 0.35 then 
 				lastClick = 0
 				dragging = false
 				hit.Visible = false
@@ -1913,7 +1849,7 @@ function section:addSlider(title, default, min, max, callback, suffix)
 	return api
 end
 
--- respectProcessed = true -> keybind diabaikan saat mengetik di chat / textbox
+-- respectProcessed 
 function section:addKeybind(title, default, callback, changedCallback, respectProcessed)
 	local lib = self.library
 	local key = default
@@ -1926,7 +1862,7 @@ function section:addKeybind(title, default, callback, changedCallback, respectPr
 		Text = key and key.Name or "None", Parent = row,
 	}, {corner(6), stroke(Theme.AccentLine)})
 
-	-- jalankan callback ketika tombol ditekan
+	-- callback
 	lib:connect(UserInputService.InputBegan, function(input, processed)
 		if lib.listening then return end
 		if respectProcessed and processed then return end
@@ -1935,7 +1871,6 @@ function section:addKeybind(title, default, callback, changedCallback, respectPr
 		end
 	end)
 
-	-- klik tombol untuk ganti keybind (Esc = batal)
 	btn.MouseButton1Click:Connect(function()
 		if lib.listening then return end
 		lib.listening = true
@@ -2048,11 +1983,11 @@ function section:addDropdown(title, list, callback)
 	end)
 
 	local api = {Instance = holder}
-	function api:Set(text) -- ubah teks yang tampil di dropdown (mis. "Custom")
+	function api:Set(text) 
 		box.Text = text or ""
 	end
 	function api:Get() return box.Text end
-	function api:Refresh() -- tutup, kosongkan, dan bangun ulang daftar dari list terbaru
+	function api:Refresh() 
 		open = false
 		box:ReleaseFocus()
 		for _, c in ipairs(listFrame:GetChildren()) do
