@@ -23,12 +23,12 @@ return {
 	-- kartu "What's New" di Dashboard
 	NewsTitle = "What's New",
 	News = {
-		{Kind = "update", Date = "November 21, 2026", Title = "Version 1.4.2", Text = "Improved interface, added new features and performance optimizations."},
+		{Kind = "update", Date = "November 22, 2026", Title = "Version 1.0.0", Text = "Improved interface, added new features and performance optimizations."},
 		{Kind = "news",   Date = "November 19, 2026", Title = "New UI Design", Text = "A redesigned dashboard with a more modern and minimal interface."},
 	},
 
 	-- tombol Discord di Settings (hapus tabel ini untuk menyembunyikan card-nya)
-	Discord = {Code = "ENHYznSPmM"},
+	Discord = {Code = "fufqtW7Zs"},
 
 	-- halaman khusus game: [PlaceId] = {Page = nama tab, Feature = nama fitur (opsional)}
 	Games = {

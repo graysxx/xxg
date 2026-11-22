@@ -59,7 +59,7 @@ local function main()
 
 	-- 1) unduh SEMUA file dulu, sebelum UI dibuat
 	preload("Config.lua")
-	local Cfg = import("Config.lua")
+local Cfg = import("Config.lua")
 	preload("Lang/Strings.lua")
 	preload("Library/UI.lua")
 	for _, name in ipairs(Cfg.Modules) do preload("Modules/" .. name .. ".lua") end
