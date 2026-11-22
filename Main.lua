@@ -1,5 +1,5 @@
 local BASE = "https://raw.githubusercontent.com/graysxx/xxg/main/"
-local LOCAL_DIR = "C:\\Users\\User\\Downloads\\xxg-panel\\"
+local LOCAL_DIR = nil
 
 if not game:IsLoaded() then game.Loaded:Wait() end
 
