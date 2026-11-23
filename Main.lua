@@ -49,7 +49,7 @@ end
 local function import(path)
 	if not sources[path] then preload(path) end
 	local fn, err = loadstring(sources[path])
-	assert(fn, "error di " .. path .. ": " .. tostring(err))
+	assert(fn, "ERROR " .. path .. ": " .. tostring(err))
 	return fn()
 end
 
@@ -62,13 +62,13 @@ local Cfg = import("Config.lua")
 	preload("Lang/Strings.lua")
 	preload("Library/UI.lua")
 	for _, name in ipairs(Cfg.Modules) do preload("Modules/" .. name .. ".lua") end
-	log("semua file terunduh")
+	log("All Modules Preloaded")
 
 	local Strings = import("Lang/Strings.lua")
 	local UILibrary = import("Library/UI.lua")
 	local D = Cfg.Defaults
 
-	log("buat window")
+	log("Setting up Panel")
 	local UI = UILibrary.new(Cfg.Title, Cfg.Subtitle, Cfg.Version)
 	UI:setBackgroundTransparency(D.Transparency / 100)
 	UI:addStrings(Strings.List)
@@ -80,11 +80,11 @@ local Cfg = import("Config.lua")
 	local ctx = {UI = UI, Theme = UI.Theme, Cfg = Cfg, L = L, import = import, modules = {}, pages = {}}
 
 	for _, name in ipairs(Cfg.Modules) do
-		log("modul " .. name)
+		log("Module: " .. name)
 		local ok, err = pcall(function() import("Modules/" .. name .. ".lua")(ctx) end)
 		if not ok then
-			log("modul " .. name .. " GAGAL: " .. tostring(err))
-			warn("[ControlPanel] modul " .. name .. " FAILED: " .. tostring(err))
+			log("Module: " .. name .. " FAILED: " .. tostring(err))
+			warn("[ControlPanel] Module: " .. name .. " FAILED: " .. tostring(err))
 			UI:notify("Failed to load module: " .. name, "error")
 		end
 		task.wait()
@@ -108,7 +108,7 @@ local Cfg = import("Config.lua")
 
 	env.XXG_Cleanup = function() UI:Close() end
 
-	log("selesai")
+	log("XXG Panel Setup complete")
 end
 
 local ok, err = pcall(main)
