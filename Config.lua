@@ -5,7 +5,7 @@ return {
 	Updated = "November 22, 2026",
 	VersionURL = "",
 
-	Modules = {"Dashboard", "Vehicle", "Games", "Misc", "Player", "Settings", "ConfigManager"},
+	Modules = {"Dashboard", "Vehicle", "Misc", "Player", "Settings", "ConfigManager"},
 
 	ConfigFolder = "XXGControlPanel", 
 
@@ -22,11 +22,4 @@ return {
 	},
 
 	Discord = {Code = "fufqtW7Zs"},
-
-	Games = {
-		[3351674303] = {Page = "Wayfort", Feature = "DrivingEmpire"},
-		[891852901]  = {Page = "Greenville"},
-		[54865335]   = {Page = "Westover"},
-		[5232896677] = {Page = "Pacifico"},
-	},
 }
