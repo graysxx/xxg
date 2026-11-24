@@ -46,6 +46,13 @@ return {
 		{"Fly", "Terbang"}, {"Reset Fly", "Reset Terbang"},
 		{"Controls: W/A/S/D to move, Space to go up, Left Shift to go down. Not active while seated in a vehicle.",
 			"Kontrol: W/A/S/D untuk bergerak, Space naik, Left Shift turun. Tidak aktif saat duduk di kendaraan."},
+		{"Target Player", "Pemain Target"}, {"Select Player", "Pilih Pemain"},
+		{"None", "Tidak ada"}, {"Clear Target", "Hapus Target"},
+		{"Attach to Player", "Tempel ke Pemain"}, {"Position", "Posisi"},
+		{"Distance (studs)", "Jarak (studs)"},
+		{"Follow Player", "Ikuti Pemain"}, {"Follow Distance (studs)", "Jarak Ikut (studs)"},
+		{"Target cleared", "Target dihapus"}, {"Select a player first", "Pilih pemain dulu"},
+		{"Target left the game", "Target keluar dari game"},
 		-- settings
 		{"Keybinds", "Keybind"}, {"Toggle Panel", "Tampilkan/Sembunyikan Panel"}, {"Appearance", "Tampilan"},
 		{"Theme", "Tema"}, {"Custom Color", "Warna Kustom"}, {"Background Transparency", "Transparansi Latar"},
@@ -69,5 +76,6 @@ return {
 		{"Select a config to delete first", "Pilih config yang mau dihapus dulu"}, {"Failed to delete config", "Gagal menghapus config"},
 		{"Discord invite sent", "Undangan Discord dikirim"}, {"Discord link copied", "Link Discord berhasil disalin"},
 		{"Failed to copy Discord link", "Gagal menyalin link Discord"}, {"Settings reset", "Settings berhasil direset"},
+		
 	},
 }
