@@ -173,8 +173,8 @@ return function(ctx)
 
 	-- ===== Emote Options =====
 	local optSection = page:addSection("Emote Options")
-	optSection:addToggle("Keep Emote While Moving", true, function(v) keepMoving = v end)
-	optSection:addToggle("Loop Emote", true, function(v) loopEmote = v end)
+	optSection:addToggle("Keep Emote While Moving", false, function(v) keepMoving = v end)
+	optSection:addToggle("Loop Emote", false, function(v) loopEmote = v end)
 	optSection:addButton("Stop Emote", stopEmote)
 
 	-- ===== My Emotes =====
