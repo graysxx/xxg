@@ -19,10 +19,15 @@ return function(ctx)
 		enabled = v
 		if not v then restore() end
 	end)
-	section:addKeybind("Toggle Noclip", Enum.KeyCode.N, function()
-		toggle:Set(not toggle:Get())
-	end, nil, true) -- true (NOT HITTING WHILE CHATTING)
 	section:addLabel("Walk through walls and objects. You still stand on the ground.")
+
+	-- keybind
+	ctx.keybinds = ctx.keybinds or {}
+	table.insert(ctx.keybinds, {
+		title = "Toggle Noclip",
+		default = Enum.KeyCode.N,
+		callback = function() toggle:Set(not toggle:Get()) end,
+	})
 
 	local conn = RunService.Stepped:Connect(function()
 		if not enabled then return end

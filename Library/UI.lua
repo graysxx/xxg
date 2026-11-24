@@ -1747,7 +1747,7 @@ function section:addGrid(height, cellW, cellH)
 			Name = "Cell", AutoButtonColor = false, Text = "", BackgroundColor3 = Theme.Panel,
 			BorderSizePixel = 0, LayoutOrder = count, Parent = scroll,
 		}, {corner(8), stroke(Theme.Border, 0.4)})
-		create("ImageLabel", {
+		local img = create("ImageLabel", {
 			BackgroundTransparency = 1, Position = UDim2.new(0.5, -30, 0, 6), Size = UDim2.fromOffset(60, 60),
 			Image = image or "", ScaleType = Enum.ScaleType.Fit, Parent = cell,
 		})
@@ -1761,9 +1761,8 @@ function section:addGrid(height, cellW, cellH)
 		cell.MouseButton1Click:Connect(function()
 			if onClick then task.spawn(onClick) end
 		end)
+	return img
 	end
-	api.library = self.library
-	return api
 end
 
 function section:addToggle(title, default, callback)

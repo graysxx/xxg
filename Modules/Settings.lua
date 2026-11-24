@@ -13,7 +13,14 @@ return function(ctx)
 	local keybindSection = page:addSection("Keybinds")
 	local kbPanel = keybindSection:addKeybind("Toggle Panel", defaultKey, function()
 		UI:toggle()
-	end, nil, true) -- true = keybind notifies when pressed
+	end, nil, true) -- true (NOT HITTING WHILE CHATTING)
+
+	-- Fetch extra keybinds from other modules
+	local extraKeybinds = {}
+	for _, k in ipairs(ctx.keybinds or {}) do
+		local api = keybindSection:addKeybind(k.title, k.default, k.callback, nil, true)
+		table.insert(extraKeybinds, {api = api, default = k.default})
+	end
 
 	-- appearance
 	local appearanceSection = page:addSection("Appearance")
@@ -76,7 +83,8 @@ return function(ctx)
 	-- reset
 	local resetSection = page:addSection("Reset")
 	resetSection:addButton("Reset Settings", function()
-		kbPanel:Set(defaultKey)
+		kbPanel:Set(defaultKey) 
+		for _, e in ipairs(extraKeybinds) do e.api:Set(e.default, true) end
 		themeSwatches:Set(defaultTheme)    
 		customPicker:Set(UI.ThemePresets[defaultTheme].Accent, true)
 		bgSlider:Set(defaultTransparency)
