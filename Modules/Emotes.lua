@@ -5,11 +5,13 @@ return function(ctx)
 	local HttpService = game:GetService("HttpService")
 	local LocalPlayer = Players.LocalPlayer
 
+	local SEARCH_DELAY = 0.3 
+
 	local page = UI:addPage("Emotes")
 	ctx.pages.Emotes = page
 
 	local keepMoving, loopEmote = false, false
-	local activeTrack, stopped, lastPos = nil, true, 0
+	local activeTrack, trackDirect, stopped, lastPos = nil, false, true, 0
 
 	local function humanoid()
 		local c = LocalPlayer.Character
@@ -22,11 +24,11 @@ return function(ctx)
 		return "rbxthumb://type=Asset&id=" .. tostring(id) .. "&w=150&h=150"
 	end
 
-	-- ===== favorit  =====
+	-- ===== favorit =====
 	local FAV_DIR = (ctx.Cfg and ctx.Cfg.ConfigFolder) or "ProjectControlPanel"
 	local FAV_FILE = FAV_DIR .. "/emote-favorites.json"
 	local favList = {}  
-	local painters = {}  
+	local painters = {} 
 
 	local function loadFavs()
 		if not (isfile and readfile) then return end
@@ -56,6 +58,7 @@ return function(ctx)
 	end
 	loadFavs()
 
+	-- ===== load emote =====
 	local function isAction(p)
 		return p == Enum.AnimationPriority.Action or p == Enum.AnimationPriority.Action2
 			or p == Enum.AnimationPriority.Action3 or p == Enum.AnimationPriority.Action4
@@ -64,6 +67,7 @@ return function(ctx)
 	local function stopEmote()
 		stopped = true
 		if activeTrack then pcall(function() activeTrack:Stop(0.15) end); activeTrack = nil end
+		trackDirect = false
 		local animator = animatorOf(humanoid())
 		if animator then
 			for _, t in ipairs(animator:GetPlayingAnimationTracks()) do
@@ -80,7 +84,7 @@ return function(ctx)
 		local ok, track = pcall(function() return animator:LoadAnimation(anim) end)
 		if not ok or not track then return nil end
 		pcall(function()
-			track.Priority = Enum.AnimationPriority.Action4 
+			track.Priority = Enum.AnimationPriority.Action4
 			if loopEmote then track.Looped = true end
 		end)
 		track:Play(0.15)
@@ -133,30 +137,49 @@ return function(ctx)
 
 	local function playEmote(id, name)
 		stopEmote()
-		local track
+		local track, direct = nil, false
 		if keepMoving or loopEmote then
-			track = playDirect(id) or playViaSystem(id, name)
+			track = playDirect(id) 
+			direct = track ~= nil
+			track = track or playViaSystem(id, name)
 		else
-			track = playViaSystem(id, name) or playDirect(id) 
+			track = playViaSystem(id, name) 
+			if not track then
+				track = playDirect(id)
+				direct = track ~= nil
+			end
 		end
 		if not track then
 			UI:notify("Failed to play emote", "error")
 			return
 		end
 		stopped = false
+		trackDirect = direct
 		activeTrack = (typeof(track) == "Instance") and track or nil
 		lastPos = 0
 	end
 
 	local keepConn = RunService.Heartbeat:Connect(function()
 		if stopped or not activeTrack then return end
+
+		if not keepMoving and trackDirect then
+			local h = humanoid()
+			if h then
+				local st = h:GetState()
+				if h.MoveDirection.Magnitude > 0.1 or st == Enum.HumanoidStateType.Jumping or st == Enum.HumanoidStateType.Freefall then
+					stopEmote()
+					return
+				end
+			end
+		end
+
 		if activeTrack.IsPlaying then
 			lastPos = activeTrack.TimePosition
 			return
 		end
 		local finished = activeTrack.Length > 0 and lastPos >= activeTrack.Length - 0.2
 		if finished and not loopEmote then
-			stopped, activeTrack = true, nil
+			stopped, activeTrack = true, nil 
 		elseif keepMoving then
 			pcall(function()
 				activeTrack.Priority = Enum.AnimationPriority.Action4
@@ -164,11 +187,11 @@ return function(ctx)
 				activeTrack:Play(0.15)
 			end)
 		else
-			stopped, activeTrack = true, nil 
+			stopped, activeTrack = true, nil
 		end
 	end)
 	local charConn = LocalPlayer.CharacterAdded:Connect(function()
-		activeTrack, stopped = nil, true
+		activeTrack, stopped, trackDirect = nil, true, false
 	end)
 
 	local refreshFavorites
@@ -185,7 +208,6 @@ return function(ctx)
 			table.remove(favList, idx)
 		end
 		saveFavs()
-		-- Syncron Fav Emote
 		local list = painters[id]
 		if list then
 			for i = #list, 1, -1 do
@@ -211,7 +233,7 @@ return function(ctx)
 	optSection:addToggle("Keep Emote While Moving", false, function(v) keepMoving = v end)
 	optSection:addToggle("Loop Emote", false, function(v)
 		loopEmote = v
-		if activeTrack then pcall(function() if v then activeTrack.Looped = true end end) end
+		if v and activeTrack then pcall(function() activeTrack.Looped = true end) end
 	end)
 	optSection:addButton("Stop Emote", stopEmote)
 
@@ -267,7 +289,7 @@ return function(ctx)
 		tb:GetPropertyChangedSignal("Text"):Connect(function()
 			stamp += 1
 			local mine = stamp
-			task.delay(0.7, function()
+			task.delay(SEARCH_DELAY, function()
 				if mine == stamp and runSearch then runSearch(false) end
 			end)
 		end)
@@ -321,7 +343,7 @@ return function(ctx)
 
 	catSection:addButton("Load More", function() runSearch(true) end)
 
-	-- ----- Play by ID  -----
+	-- ----- Play by ID -----
 	local idSection = page:addSection("Play by ID")
 	local function playFromText(text)
 		local id = tonumber((tostring(text):gsub("%D", "")))
@@ -336,12 +358,12 @@ return function(ctx)
 	end)
 	idSection:addButton("Play Emote ID", function() playFromText(idBox:Get()) end)
 
-	-- Load emotes
 	task.spawn(function()
-		task.wait(1)
+		local t0 = os.clock()
+		while not humanoid() and os.clock() - t0 < 5 do task.wait(0.1) end
 		loadMine()
-		runSearch(false)
 	end)
+	task.spawn(function() runSearch(false) end)
 
 	ctx.modules.emotes = {
 		shutdown = function()

@@ -1164,7 +1164,7 @@ function page:_relayout()
 		local sum, list = 0, {}
 		for _, it in ipairs(self.flowItems) do
 			if it.frame.Parent == col then
-				local h = measureOf(it, inv)
+				local h = measureOf(it, inv) - (it.growCur or 0) 
 				table.insert(list, {it = it, h = h})
 				sum = sum + h
 			end
@@ -1175,9 +1175,24 @@ function page:_relayout()
 	end
 	for c, list in ipairs(lists) do
 		if #list > 0 then
-			local share = (target - natural[c]) / #list
+			local extra = target - natural[c]
+			local growers = 0
 			for _, e in ipairs(list) do
-				e.it.frame.Size = UDim2.new(1, 0, 0, math.floor(e.h + share))
+				if e.it.grow then growers = growers + 1 end
+			end
+			for _, e in ipairs(list) do
+				local add
+				if growers > 0 then
+					add = e.it.grow and extra / growers or 0 
+				else
+					add = extra / #list
+				end
+				add = math.floor(add)
+				if e.it.grow and e.it.growCur ~= add then
+					e.it.growCur = add
+					e.it.grow(add)
+				end
+				e.it.frame.Size = UDim2.new(1, 0, 0, math.floor(e.h + add))
 			end
 		end
 	end
@@ -1418,7 +1433,7 @@ function section.new(pg, title)
 
 	pg.library:_registerHover(card, bg, pg, pop)
 	pg:_register(card, false, content)
-	return setmetatable({page = pg, library = pg.library, container = content, _order = 0}, section)
+	return setmetatable({page = pg, library = pg.library, container = content, card = card, _order = 0}, section)
 end
 
 local function newRow(sec, height, className, extra)
@@ -1710,9 +1725,10 @@ function section:addTextBox(title, placeholder, callback)
 	return api
 end
 
-function section:addGrid(height, cellW, cellH)
+function section:addGrid(height, cellW, cellH, fill)
 	cellW, cellH = cellW or 84, cellH or 104
-	local row = newRow(self, height or 220, "Frame", {Name = "Grid", ClipsDescendants = true})
+	local baseHeight = height or 220
+	local row = newRow(self, baseHeight, "Frame", {Name = "Grid", ClipsDescendants = true})
 	local scroll = create("ScrollingFrame", {
 		Position = UDim2.new(0, 6, 0, 6), Size = UDim2.new(1, -12, 1, -12), BackgroundTransparency = 1,
 		BorderSizePixel = 0, ScrollBarThickness = 3, ScrollBarImageColor3 = Theme.Border,
@@ -1728,19 +1744,31 @@ function section:addGrid(height, cellW, cellH)
 		Visible = false, ZIndex = 3, Parent = row,
 	})
 
+	if fill ~= false and self.card then
+		for _, it in ipairs(self.page.items) do
+			if it.frame == self.card then
+				it.grow = function(extra) row.Size = UDim2.new(1, 0, 0, baseHeight + extra) end
+			end
+		end
+	end
+
+	local lib = self.library
 	local count = 0
 	local api = {Instance = row}
+
 	function api:Clear()
 		for _, c in ipairs(scroll:GetChildren()) do
 			if c:IsA("TextButton") then c:Destroy() end
 		end
 		count = 0
 	end
+
 	function api:SetStatus(text)
 		text = text or ""
-		status.Text = self.library and self.library:tr(text) or text
+		status.Text = lib:tr(text)
 		status.Visible = text ~= ""
 	end
+
 	function api:Add(image, text, onClick, fav)
 		count = count + 1
 		local cell = create("TextButton", {
@@ -1766,25 +1794,16 @@ function section:addGrid(height, cellW, cellH)
 		if fav then
 			local on = fav.on and true or false
 			local btn = create("TextButton", {
-				Name = "Fav", AutoButtonColor = false, Text = "", BackgroundTransparency = 1,
-				Position = UDim2.new(1, -22, 0, 3), Size = UDim2.fromOffset(18, 18), ZIndex = 3, Parent = cell,
+				Name = "Fav", AutoButtonColor = false, BackgroundTransparency = 1, Text = "★",
+				Font = Enum.Font.GothamBold, TextSize = 17, Position = UDim2.new(1, -24, 0, 2),
+				Size = UDim2.fromOffset(22, 22), ZIndex = 3, Parent = cell,
 			})
-			btn:SetAttribute("NoTheme", true) -- warna bintang tetap kuning walau tema berganti
-			local parts = {}
-			for _, rot in ipairs({0, 45}) do -- dua kotak diputar 45 derajat = bentuk bintang
-				table.insert(parts, create("Frame", {
-					AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 0, 0.5, 0), Size = UDim2.fromOffset(10, 10),
-					Rotation = rot, BorderSizePixel = 0, ZIndex = 3, Parent = btn,
-				}, {create("UIStroke", {Thickness = 1.2, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})}))
-			end
+			btn:SetAttribute("NoTheme", true) 
 			paint = function(state)
-				if not btn.Parent then return false end -- sel sudah dihapus
+				if not cell.Parent then return false end 
 				on = state and true or false
-				for _, sq in ipairs(parts) do
-					sq.BackgroundColor3 = Color3.fromRGB(251, 191, 36)
-					sq.BackgroundTransparency = on and 0 or 1
-					sq.UIStroke.Color = on and Color3.fromRGB(251, 191, 36) or Theme.Muted
-				end
+				btn.Text = on and "★" or "☆"
+				btn.TextColor3 = on and Color3.fromRGB(251, 191, 36) or Theme.Muted
 				return true
 			end
 			paint(on)
@@ -1795,7 +1814,7 @@ function section:addGrid(height, cellW, cellH)
 		end
 		return img, paint
 	end
-	api.library = self.library
+
 	return api
 end
 
