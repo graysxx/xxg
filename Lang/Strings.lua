@@ -69,6 +69,10 @@ return {
 		{"Failed to play emote", "Gagal memutar emote"}, {"Invalid emote ID", "ID emote tidak valid"},
 		{"Emote Options", "Opsi Emote"}, {"Keep Emote While Moving", "Emote Tetap Jalan Saat Bergerak"},
 		{"Loop Emote", "Ulangi Emote"}, {"Favorite Emotes", "Emote Favorit"}, {"No favorites yet", "Belum ada favorit"},
+		{"Target is too far (not loaded)", "Target terlalu jauh (belum dimuat)"},
+		{"Target not loaded, moved to last known position", "Target belum dimuat, pindah ke posisi terakhir"},
+		{"Player is too far (not loaded). Spectate starts when they come into range.",
+			"Pemain terlalu jauh (belum dimuat). Spectate dimulai saat mereka masuk jangkauan."},
 		-- settings
 		{"Keybinds", "Keybind"}, {"Toggle Panel", "Tampilkan/Sembunyikan Panel"}, {"Appearance", "Tampilan"},
 		{"Theme", "Tema"}, {"Custom Color", "Warna Kustom"}, {"Background Transparency", "Transparansi Latar"},

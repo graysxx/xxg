@@ -49,7 +49,11 @@ return function(ctx)
 		spectating = p
 		info:Set(p.DisplayName)
 		drop:Set(labelOf(p))
-		setSubject(humanoidOf(p))
+		local h = humanoidOf(p)
+		setSubject(h)
+		if not h then
+			UI:notify("Player is too far (not loaded). Spectate starts when they come into range.", "info")
+		end
 	end
 
 	local function step(dir)

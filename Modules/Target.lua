@@ -10,6 +10,13 @@ return function(ctx)
 	local attachEnabled, attachMode, attachDist = false, "Back", 3
 	local followEnabled, followDist = false, 8
 	local targetInfo, playerDrop, attachToggle, followToggle
+	local lastKnown, noticeAt, lastChase = nil, 0, 0 -- Last position
+	local function notice(text)
+		if os.clock() - noticeAt > 3 then
+			noticeAt = os.clock()
+			UI:notify(text, "error")
+		end
+	end
 
 	local function myParts()
 		local c = LocalPlayer.Character
@@ -17,11 +24,12 @@ return function(ctx)
 		return h, h and h.RootPart
 	end
 
-	local function targetRoot()
+		local function targetRoot()
 		local c = target and target.Character
 		if not c then return nil end
 		local h = c:FindFirstChildWhichIsA("Humanoid")
 		return (h and h.RootPart) or c:FindFirstChild("HumanoidRootPart")
+			or c:FindFirstChild("Head") or c:FindFirstChildWhichIsA("BasePart")
 	end
 
 	-- Player list
@@ -50,12 +58,14 @@ return function(ctx)
 		local p = byLabel[label]
 		if p then
 			target = p
+			lastKnown = nil
 			targetInfo:Set(p.DisplayName)
 		end
 	end)
 	targetInfo = targetSection:addInfo("Target", UI:tr("None"))
 	targetSection:addButton("Clear Target", function()
 		target = nil
+		lastKnown = nil
 		playerDrop:Set("")
 		targetInfo:Set(UI:tr("None"))
 		attachToggle:Set(false)
@@ -63,14 +73,13 @@ return function(ctx)
 		UI:notify("Target cleared", "success")
 	end)
 
-    targetSection:addButton("Teleport to Target", function()
+    	targetSection:addButton("Teleport to Target", function()
 		if not target then
 			UI:notify("Select a player first", "error")
 			return
 		end
 		local h, root = myParts()
-		local tRoot = targetRoot()
-		if not (h and root and tRoot) then
+		if not (h and root) then
 			UI:notify("Target not available", "error")
 			return
 		end
@@ -78,8 +87,16 @@ return function(ctx)
 			UI:notify("Leave the vehicle first", "error")
 			return
 		end
-		root.CFrame = tRoot.CFrame * CFrame.new(0, 0, 4) -- 4 studs 
-		UI:notify("Teleported to target", "success")
+		local tRoot = targetRoot()
+		if tRoot then
+			root.CFrame = tRoot.CFrame * CFrame.new(0, 0, 2) 
+			UI:notify("Teleported to target", "success")
+		elseif lastKnown then
+			root.CFrame = lastKnown * CFrame.new(0, 0, 2)
+			UI:notify("Target not loaded, moved to last known position", "info")
+		else
+			UI:notify("Target is too far (not loaded)", "error")
+		end
 	end)
 
 	-- ----- Attach to Player -----
@@ -111,11 +128,19 @@ return function(ctx)
 	local attachConn = RunService.Stepped:Connect(function()
 		if not attachEnabled then return end
 		local h, root = myParts()
+		if not (h and root) or h.Health <= 0 or h.SeatPart then return end
 		local tRoot = targetRoot()
-		if not (h and root and tRoot) or h.Health <= 0 or h.SeatPart then return end
-		root.CFrame = tRoot.CFrame * offsetFor()
-		root.AssemblyLinearVelocity = Vector3.zero
-		root.AssemblyAngularVelocity = Vector3.zero
+		if tRoot then
+			root.CFrame = tRoot.CFrame * offsetFor()
+			root.AssemblyLinearVelocity = Vector3.zero
+			root.AssemblyAngularVelocity = Vector3.zero
+		else
+			notice("Target is too far (not loaded)")
+			if lastKnown and os.clock() - lastChase > 1.5 then
+				lastChase = os.clock()
+				root.CFrame = lastKnown * offsetFor()
+			end
+		end
 	end)
 
 	-- ----- Follow Player -----
@@ -136,18 +161,21 @@ return function(ctx)
 	local followSlider = followSection:addSlider("Follow Distance (studs)", 8, 3, 40, function(v) followDist = v end)
 
 	local lastMove, stuckTime = 0, 0
+
 	local followConn = RunService.Heartbeat:Connect(function(dt)
 		if not followEnabled then return end
 		local h, root = myParts()
+		if not (h and root) or h.Health <= 0 or h.SeatPart then return end
 		local tRoot = targetRoot()
-		if not (h and root and tRoot) or h.Health <= 0 or h.SeatPart then return end
-		local dist = (tRoot.Position - root.Position).Magnitude
+		if not tRoot then notice("Target is too far (not loaded)") end
+		local dest = tRoot and tRoot.Position or (lastKnown and lastKnown.Position)
+		if not dest then return end
+		local dist = (dest - root.Position).Magnitude
 		if dist > followDist then
 			if os.clock() - lastMove > 0.2 then
 				lastMove = os.clock()
-				h:MoveTo(tRoot.Position)
+				h:MoveTo(dest)
 			end
-			-- Stuck validation
 			local v = root.AssemblyLinearVelocity
 			if Vector3.new(v.X, 0, v.Z).Magnitude < 1 then stuckTime += dt else stuckTime = 0 end
 			if stuckTime > 0.6 then
@@ -158,12 +186,17 @@ return function(ctx)
 			stuckTime = 0
 			if os.clock() - lastMove > 0.2 then
 				lastMove = os.clock()
-				h:MoveTo(root.Position) -- Stop moving
+				h:MoveTo(root.Position)
 			end
 		end
 	end)
 
-	-- pemain masuk / keluar
+	local trackConn = RunService.Heartbeat:Connect(function()
+		if not target then return end
+		local r = targetRoot()
+		if r then lastKnown = r.CFrame end
+	end)
+
 	local addedConn = Players.PlayerAdded:Connect(function() rebuildList() end)
 	local removingConn = Players.PlayerRemoving:Connect(function(p)
 		if p == target then
@@ -192,7 +225,7 @@ return function(ctx)
 		shutdown = function()
 			attachEnabled, followEnabled = false, false
 			stopMoving()
-			attachConn:Disconnect(); followConn:Disconnect()
+			attachConn:Disconnect(); trackConn:Disconnect(); followConn:Disconnect()
 			addedConn:Disconnect(); removingConn:Disconnect()
 		end,
 	}
