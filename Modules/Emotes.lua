@@ -22,7 +22,6 @@ return function(ctx)
 		for _, t in ipairs(tracks) do pcall(function() t:Stop() end) end
 	end
 
-	-- putar emote berdasarkan asset ID
 	local function playById(id)
 		local h = humanoid()
 		if not h then return false end
@@ -30,7 +29,7 @@ return function(ctx)
 		return ok and success == true
 	end
 
-	-- ----- My Emotes (emote yang terpasang di avatarmu) -----
+	-- ----- My Emotes  -----
 	local mySection = page:addSection("My Emotes")
 	local myGrid = mySection:addGrid(170)
 
@@ -64,7 +63,7 @@ return function(ctx)
 	mySection:addButton("Refresh My Emotes", loadMine)
 	mySection:addButton("Stop Emote", stopEmote)
 
-	-- ----- Emote Catalog (cari emote di katalog Roblox) -----
+	-- ----- Emote Catalog -----
 	local catSection = page:addSection("Emote Catalog")
 	local searchBox = catSection:addTextBox("Search", "Enter keyword")
 	local catGrid = catSection:addGrid(240)
