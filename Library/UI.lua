@@ -1710,60 +1710,93 @@ function section:addTextBox(title, placeholder, callback)
 	return api
 end
 
--- emotes
-function api:Add(image, text, onClick, fav)
-	count = count + 1
-	local cell = create("TextButton", {
-		Name = "Cell", AutoButtonColor = false, Text = "", BackgroundColor3 = Theme.Panel,
-		BorderSizePixel = 0, LayoutOrder = count, Parent = scroll,
-	}, {corner(8), stroke(Theme.Border, 0.4)})
-	local img = create("ImageLabel", {
-		BackgroundTransparency = 1, Position = UDim2.new(0.5, -30, 0, 6), Size = UDim2.fromOffset(60, 60),
-		Image = image or "", ScaleType = Enum.ScaleType.Fit, Parent = cell,
+function section:addGrid(height, cellW, cellH)
+	cellW, cellH = cellW or 84, cellH or 104
+	local row = newRow(self, height or 220, "Frame", {Name = "Grid", ClipsDescendants = true})
+	local scroll = create("ScrollingFrame", {
+		Position = UDim2.new(0, 6, 0, 6), Size = UDim2.new(1, -12, 1, -12), BackgroundTransparency = 1,
+		BorderSizePixel = 0, ScrollBarThickness = 3, ScrollBarImageColor3 = Theme.Border,
+		CanvasSize = UDim2.new(0, 0, 0, 0), AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		ScrollingDirection = Enum.ScrollingDirection.Y, Parent = row,
+	}, {create("UIGridLayout", {
+		CellSize = UDim2.fromOffset(cellW, cellH), CellPadding = UDim2.fromOffset(6, 6),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	})})
+	local status = newLabel({
+		AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 0, 0.5, 0), Size = UDim2.new(1, -24, 0, 40),
+		TextSize = 11, TextColor3 = Theme.Muted, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Center,
+		Visible = false, ZIndex = 3, Parent = row,
 	})
-	newLabel({
-		Text = text or "", Position = UDim2.new(0, 4, 0, 68), Size = UDim2.new(1, -8, 0, cellH - 72),
-		TextSize = 10, TextWrapped = true, TextTruncate = Enum.TextTruncate.AtEnd,
-		TextXAlignment = Enum.TextXAlignment.Center, TextYAlignment = Enum.TextYAlignment.Top, Parent = cell,
-	})
-	cell.MouseEnter:Connect(function() tween(cell, {BackgroundColor3 = Theme.AccentSoft}) end)
-	cell.MouseLeave:Connect(function() tween(cell, {BackgroundColor3 = Theme.Panel}) end)
-	cell.MouseButton1Click:Connect(function()
-		if onClick then task.spawn(onClick) end
-	end)
 
-	local paint
-	if fav then
-		local on = fav.on and true or false
-		local btn = create("TextButton", {
-			Name = "Fav", AutoButtonColor = false, Text = "", BackgroundTransparency = 1,
-			Position = UDim2.new(1, -22, 0, 3), Size = UDim2.fromOffset(18, 18), ZIndex = 3, Parent = cell,
-		})
-		btn:SetAttribute("NoTheme", true) -- warna bintang tetap kuning walau tema berganti
-		local parts = {}
-		for _, rot in ipairs({0, 45}) do -- dua kotak diputar 45 derajat = bentuk bintang
-			table.insert(parts, create("Frame", {
-				AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 0, 0.5, 0), Size = UDim2.fromOffset(10, 10),
-				Rotation = rot, BorderSizePixel = 0, ZIndex = 3, Parent = btn,
-			}, {create("UIStroke", {Thickness = 1.2, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})}))
+	local count = 0
+	local api = {Instance = row}
+	function api:Clear()
+		for _, c in ipairs(scroll:GetChildren()) do
+			if c:IsA("TextButton") then c:Destroy() end
 		end
-		paint = function(state)
-			if not btn.Parent then return false end -- sel sudah dihapus
-			on = state and true or false
-			for _, sq in ipairs(parts) do
-				sq.BackgroundColor3 = Color3.fromRGB(251, 191, 36)
-				sq.BackgroundTransparency = on and 0 or 1
-				sq.UIStroke.Color = on and Color3.fromRGB(251, 191, 36) or Theme.Muted
-			end
-			return true
-		end
-		paint(on)
-		btn.MouseButton1Click:Connect(function()
-			paint(not on)
-			if fav.onToggle then task.spawn(fav.onToggle, on) end
-		end)
+		count = 0
 	end
-	return img, paint
+	function api:SetStatus(text)
+		text = text or ""
+		status.Text = self.library and self.library:tr(text) or text
+		status.Visible = text ~= ""
+	end
+	function api:Add(image, text, onClick, fav)
+		count = count + 1
+		local cell = create("TextButton", {
+			Name = "Cell", AutoButtonColor = false, Text = "", BackgroundColor3 = Theme.Panel,
+			BorderSizePixel = 0, LayoutOrder = count, Parent = scroll,
+		}, {corner(8), stroke(Theme.Border, 0.4)})
+		local img = create("ImageLabel", {
+			BackgroundTransparency = 1, Position = UDim2.new(0.5, -30, 0, 6), Size = UDim2.fromOffset(60, 60),
+			Image = image or "", ScaleType = Enum.ScaleType.Fit, Parent = cell,
+		})
+		newLabel({
+			Text = text or "", Position = UDim2.new(0, 4, 0, 68), Size = UDim2.new(1, -8, 0, cellH - 72),
+			TextSize = 10, TextWrapped = true, TextTruncate = Enum.TextTruncate.AtEnd,
+			TextXAlignment = Enum.TextXAlignment.Center, TextYAlignment = Enum.TextYAlignment.Top, Parent = cell,
+		})
+		cell.MouseEnter:Connect(function() tween(cell, {BackgroundColor3 = Theme.AccentSoft}) end)
+		cell.MouseLeave:Connect(function() tween(cell, {BackgroundColor3 = Theme.Panel}) end)
+		cell.MouseButton1Click:Connect(function()
+			if onClick then task.spawn(onClick) end
+		end)
+
+		local paint
+		if fav then
+			local on = fav.on and true or false
+			local btn = create("TextButton", {
+				Name = "Fav", AutoButtonColor = false, Text = "", BackgroundTransparency = 1,
+				Position = UDim2.new(1, -22, 0, 3), Size = UDim2.fromOffset(18, 18), ZIndex = 3, Parent = cell,
+			})
+			btn:SetAttribute("NoTheme", true) -- warna bintang tetap kuning walau tema berganti
+			local parts = {}
+			for _, rot in ipairs({0, 45}) do -- dua kotak diputar 45 derajat = bentuk bintang
+				table.insert(parts, create("Frame", {
+					AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 0, 0.5, 0), Size = UDim2.fromOffset(10, 10),
+					Rotation = rot, BorderSizePixel = 0, ZIndex = 3, Parent = btn,
+				}, {create("UIStroke", {Thickness = 1.2, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})}))
+			end
+			paint = function(state)
+				if not btn.Parent then return false end -- sel sudah dihapus
+				on = state and true or false
+				for _, sq in ipairs(parts) do
+					sq.BackgroundColor3 = Color3.fromRGB(251, 191, 36)
+					sq.BackgroundTransparency = on and 0 or 1
+					sq.UIStroke.Color = on and Color3.fromRGB(251, 191, 36) or Theme.Muted
+				end
+				return true
+			end
+			paint(on)
+			btn.MouseButton1Click:Connect(function()
+				paint(not on)
+				if fav.onToggle then task.spawn(fav.onToggle, on) end
+			end)
+		end
+		return img, paint
+	end
+	api.library = self.library
+	return api
 end
 
 function section:addToggle(title, default, callback)
