@@ -1728,19 +1728,23 @@ function section:addGrid(height, cellW, cellH)
 		Visible = false, ZIndex = 3, Parent = row,
 	})
 
+	local lib = self.library
 	local count = 0
 	local api = {Instance = row}
+
 	function api:Clear()
 		for _, c in ipairs(scroll:GetChildren()) do
 			if c:IsA("TextButton") then c:Destroy() end
 		end
 		count = 0
 	end
+
 	function api:SetStatus(text)
 		text = text or ""
-		status.Text = self.library and self.library:tr(text) or text
+		status.Text = lib:tr(text)
 		status.Visible = text ~= ""
 	end
+
 	function api:Add(image, text, onClick)
 		count = count + 1
 		local cell = create("TextButton", {
@@ -1761,8 +1765,10 @@ function section:addGrid(height, cellW, cellH)
 		cell.MouseButton1Click:Connect(function()
 			if onClick then task.spawn(onClick) end
 		end)
-	return img
+		return img
 	end
+
+	return api
 end
 
 function section:addToggle(title, default, callback)
