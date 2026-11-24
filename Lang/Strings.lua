@@ -67,6 +67,8 @@ return {
 		{"Play Emote ID", "Putar ID Emote"}, {"Loading...", "Memuat..."}, {"No emotes found", "Emote tidak ditemukan"},
 		{"No equipped emotes found", "Emote terpasang tidak ditemukan"}, {"Failed to load catalog", "Gagal memuat katalog"},
 		{"Failed to play emote", "Gagal memutar emote"}, {"Invalid emote ID", "ID emote tidak valid"},
+		{"Emote Options", "Opsi Emote"}, {"Keep Emote While Moving", "Emote Tetap Jalan Saat Bergerak"},
+		{"Loop Emote", "Ulangi Emote"}, {"Favorite Emotes", "Emote Favorit"}, {"No favorites yet", "Belum ada favorit"},
 		-- settings
 		{"Keybinds", "Keybind"}, {"Toggle Panel", "Tampilkan/Sembunyikan Panel"}, {"Appearance", "Tampilan"},
 		{"Theme", "Tema"}, {"Custom Color", "Warna Kustom"}, {"Background Transparency", "Transparansi Latar"},
