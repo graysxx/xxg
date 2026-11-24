@@ -1728,30 +1728,26 @@ function section:addGrid(height, cellW, cellH)
 		Visible = false, ZIndex = 3, Parent = row,
 	})
 
-	local lib = self.library
 	local count = 0
 	local api = {Instance = row}
-
 	function api:Clear()
 		for _, c in ipairs(scroll:GetChildren()) do
 			if c:IsA("TextButton") then c:Destroy() end
 		end
 		count = 0
 	end
-
 	function api:SetStatus(text)
 		text = text or ""
-		status.Text = lib:tr(text)
+		status.Text = self.library and self.library:tr(text) or text
 		status.Visible = text ~= ""
 	end
-
 	function api:Add(image, text, onClick)
 		count = count + 1
 		local cell = create("TextButton", {
 			Name = "Cell", AutoButtonColor = false, Text = "", BackgroundColor3 = Theme.Panel,
 			BorderSizePixel = 0, LayoutOrder = count, Parent = scroll,
 		}, {corner(8), stroke(Theme.Border, 0.4)})
-		local img = create("ImageLabel", {
+		create("ImageLabel", {
 			BackgroundTransparency = 1, Position = UDim2.new(0.5, -30, 0, 6), Size = UDim2.fromOffset(60, 60),
 			Image = image or "", ScaleType = Enum.ScaleType.Fit, Parent = cell,
 		})
@@ -1765,9 +1761,8 @@ function section:addGrid(height, cellW, cellH)
 		cell.MouseButton1Click:Connect(function()
 			if onClick then task.spawn(onClick) end
 		end)
-		return img
 	end
-
+	api.library = self.library
 	return api
 end
 
