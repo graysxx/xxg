@@ -5,8 +5,8 @@ return function(ctx)
 	local LocalPlayer = Players.LocalPlayer
 	local page = ctx.pages.Misc or UI:addPage("Misc")
 
-	local target                      -- Player yang dipilih
-	local listNames, byLabel = {}, {} -- isi dropdown (diubah di tempat)
+	local target                      -- Target player (Player object)
+	local listNames, byLabel = {}, {} -- Target List
 	local attachEnabled, attachMode, attachDist = false, "Back", 3
 	local followEnabled, followDist = false, 8
 	local targetInfo, playerDrop, attachToggle, followToggle
@@ -24,7 +24,7 @@ return function(ctx)
 		return (h and h.RootPart) or c:FindFirstChild("HumanoidRootPart")
 	end
 
-	-- daftar pemain: "DisplayName (@Username)". Bisa dicari dengan mengetik salah satunya.
+	-- Player list
 	local function rebuildList(exclude)
 		table.clear(listNames)
 		table.clear(byLabel)
@@ -63,6 +63,25 @@ return function(ctx)
 		UI:notify("Target cleared", "success")
 	end)
 
+    targetSection:addButton("Teleport to Target", function()
+		if not target then
+			UI:notify("Select a player first", "error")
+			return
+		end
+		local h, root = myParts()
+		local tRoot = targetRoot()
+		if not (h and root and tRoot) then
+			UI:notify("Target not available", "error")
+			return
+		end
+		if h.SeatPart then
+			UI:notify("Leave the vehicle first", "error")
+			return
+		end
+		root.CFrame = tRoot.CFrame * CFrame.new(0, 0, 4) -- 4 studs 
+		UI:notify("Teleported to target", "success")
+	end)
+
 	-- ----- Attach to Player -----
 	local attachSection = page:addSection("Attach to Player")
 	attachToggle = attachSection:addToggle("Enabled", false, function(v)
@@ -86,7 +105,7 @@ return function(ctx)
 		if attachMode == "Above" then return CFrame.new(0, attachDist, 0) end
 		if attachMode == "Left" then return CFrame.new(-attachDist, 0, 0) end
 		if attachMode == "Right" then return CFrame.new(attachDist, 0, 0) end
-		return CFrame.new(0, 0, attachDist) -- Back (karakter menghadap -Z, jadi belakang = +Z)
+		return CFrame.new(0, 0, attachDist) -- Back (-Z) (default)
 	end
 
 	local attachConn = RunService.Stepped:Connect(function()
@@ -128,7 +147,7 @@ return function(ctx)
 				lastMove = os.clock()
 				h:MoveTo(tRoot.Position)
 			end
-			-- kalau tersangkut (hampir tidak bergerak padahal masih jauh), lompat
+			-- Stuck validation
 			local v = root.AssemblyLinearVelocity
 			if Vector3.new(v.X, 0, v.Z).Magnitude < 1 then stuckTime += dt else stuckTime = 0 end
 			if stuckTime > 0.6 then
@@ -139,7 +158,7 @@ return function(ctx)
 			stuckTime = 0
 			if os.clock() - lastMove > 0.2 then
 				lastMove = os.clock()
-				h:MoveTo(root.Position) -- sudah cukup dekat, berhenti
+				h:MoveTo(root.Position) -- Stop moving
 			end
 		end
 	end)

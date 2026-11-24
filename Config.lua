@@ -5,7 +5,7 @@ return {
 	Updated = "November 22, 2026",
 	VersionURL = "",
 
-	Modules = {"Dashboard", "Vehicle", "Misc", "Player", "Target", "Settings", "ConfigManager"},
+	Modules = {"Dashboard", "Vehicle", "AutoDrive", "Misc", "Player", "Target", "Noclip", "Spectate", "Emotes", "Settings", "ConfigManager"},
 
 	ConfigFolder = "XXGControlPanel", 
 
