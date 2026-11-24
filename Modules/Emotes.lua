@@ -8,8 +8,15 @@ return function(ctx)
 	local page = UI:addPage("Emotes")
 	ctx.pages.Emotes = page
 
-	local keepMoving, loopEmote = true, true
+	local keepMoving, loopEmote = false, false
 	local activeTrack, stopped = nil, true
+
+	local trace = {}
+	local function tlog(msg)
+		table.insert(trace, string.format("[%.1f] %s", os.clock(), tostring(msg)))
+		if #trace > 60 then table.remove(trace, 1) end
+		if writefile then pcall(writefile, "xxg-emotes.txt", table.concat(trace, "\n")) end
+	end
 
 	local function humanoid()
 		local c = LocalPlayer.Character
@@ -19,20 +26,28 @@ return function(ctx)
 		return h and h:FindFirstChildWhichIsA("Animator")
 	end
 
-	-- get HTTP
+	-- HTTP
 	local function httpGet(url)
 		local ok, body = pcall(function() return game:HttpGet(url) end)
-		if ok and type(body) == "string" and #body > 0 then return body end
+		if ok and type(body) == "string" and #body > 0 then
+			tlog("HttpGet OK " .. url)
+			return body
+		end
+		tlog("HttpGet gagal " .. url .. " -> " .. tostring(body))
 		local req = request or http_request or (syn and syn.request)
 		if req then
 			local ok2, res = pcall(req, {Url = url, Method = "GET"})
-			if ok2 and res and res.Body and (res.StatusCode == nil or res.StatusCode == 200) then return res.Body end
-			error("HTTP " .. tostring(ok2 and res and res.StatusCode or res))
+			if ok2 and res and res.Body and (res.StatusCode == nil or res.StatusCode == 200) then
+				tlog("request OK " .. url)
+				return res.Body
+			end
+			local code = ok2 and res and res.StatusCode or res
+			tlog("request gagal " .. url .. " -> " .. tostring(code))
+			error("HTTP " .. tostring(code))
 		end
 		error(tostring(body))
 	end
 
-	-- ===== img =====
 	local thumbQueue, thumbRunning = {}, false
 	local canDownload = (writefile and (getcustomasset or getsynasset)) and true or false
 
@@ -49,8 +64,7 @@ return function(ctx)
 		return (getcustomasset or getsynasset)(path)
 	end
 
-	local function applyThumb(label, id)
-		label.Image = "rbxthumb://type=Asset&id=" .. tostring(id) .. "&w=150&h=150"
+	local function watchThumb(label, id)
 		task.delay(2.5, function()
 			if not label.Parent or label.IsLoaded or not canDownload then return end
 			table.insert(thumbQueue, {label = label, id = id})
@@ -64,7 +78,7 @@ return function(ctx)
 						if ok and job.label.Parent then
 							job.label.Image = asset
 						elseif not ok then
-							warn("[ControlPanel] thumbnail " .. tostring(job.id) .. ": " .. tostring(asset))
+							tlog("thumbnail " .. tostring(job.id) .. ": " .. tostring(asset))
 						end
 					end
 					task.wait(0.05)
@@ -75,11 +89,10 @@ return function(ctx)
 	end
 
 	local function addEntry(grid, id, name, onClick)
-		local img = grid:Add("", name, onClick)
-		if img then applyThumb(img, id) end
+		local img = grid:Add("rbxthumb://type=Asset&id=" .. tostring(id) .. "&w=150&h=150", name, onClick)
+		if img then watchThumb(img, id) end
 	end
 
-	-- ===== play emote =====
 	local function isAction(p)
 		return p == Enum.AnimationPriority.Action or p == Enum.AnimationPriority.Action2
 			or p == Enum.AnimationPriority.Action3 or p == Enum.AnimationPriority.Action4
@@ -98,10 +111,11 @@ return function(ctx)
 
 	local function applyTrackSettings(track)
 		pcall(function()
-			track.Priority = Enum.AnimationPriority.Action4
+			track.Priority = Enum.AnimationPriority.Action4 
 			track.Looped = loopEmote
 		end)
 	end
+
 
 	local function playDirect(id)
 		local animator = animatorOf(humanoid())
@@ -120,6 +134,7 @@ return function(ctx)
 		end
 		return track
 	end
+
 
 	local function playViaSystem(id, name)
 		local h = humanoid()
@@ -151,6 +166,7 @@ return function(ctx)
 		stopEmote()
 		local track = playDirect(id) or playViaSystem(id, name)
 		if not track then
+			tlog("gagal memutar emote " .. tostring(id))
 			UI:notify("Failed to play emote", "error")
 			return
 		end
@@ -182,29 +198,38 @@ return function(ctx)
 	local myGrid = mySection:addGrid(170)
 
 	local function loadMine()
-		myGrid:Clear()
-		local h = humanoid()
-		local emotes = {}
-		if h then
-			local okDesc, desc = pcall(function() return h:GetAppliedDescription() end)
-			if okDesc and desc then
-				local ok, res = pcall(function() return desc:GetEmotes() end)
-				if ok and type(res) == "table" then emotes = res end
+		local ok, err = pcall(function()
+			myGrid:Clear()
+			local h = humanoid()
+			local emotes = {}
+			if h then
+				local okDesc, desc = pcall(function() return h:GetAppliedDescription() end)
+				if okDesc and desc then
+					local okE, res = pcall(function() return desc:GetEmotes() end)
+					if okE and type(res) == "table" then emotes = res end
+				end
 			end
+			local n = 0
+			for name, ids in pairs(emotes) do
+				local id = type(ids) == "table" and ids[1] or ids
+				n = n + 1
+				addEntry(myGrid, id, name, function() playEmote(id, name) end)
+			end
+			myGrid:SetStatus(n == 0 and "No equipped emotes found" or "")
+		end)
+		if not ok then
+			tlog("loadMine: " .. tostring(err))
+			myGrid:SetStatus("Failed to load emotes")
 		end
-		local n = 0
-		for name, ids in pairs(emotes) do
-			local id = type(ids) == "table" and ids[1] or ids
-			n = n + 1
-			addEntry(myGrid, id, name, function() playEmote(id, name) end)
-		end
-		myGrid:SetStatus(n == 0 and "No equipped emotes found" or "")
 	end
 	mySection:addButton("Refresh My Emotes", loadMine)
 
 	-- ===== Emote Catalog =====
 	local catSection = page:addSection("Emote Catalog")
-	local searchBox = catSection:addTextBox("Search", "Enter keyword")
+	local runSearch
+	local searchBox = catSection:addTextBox("Search", "Enter keyword", function(_, enter)
+		if enter and runSearch then runSearch(false) end 
+	end)
 	local catGrid = catSection:addGrid(240)
 
 	local catalogBase = "https://catalog.roblox.com/v1/search/items/details"
@@ -233,6 +258,7 @@ return function(ctx)
 					end
 				else
 					lastErr = "bad json"
+					tlog("JSON tidak valid dari " .. url)
 				end
 			else
 				lastErr = tostring(body)
@@ -242,7 +268,9 @@ return function(ctx)
 		error(lastErr)
 	end
 
+	-- Backup HTTP FAIL
 	local function searchViaEditor(keyword)
+		tlog("mencoba AvatarEditorService")
 		local params = CatalogSearchParams.new()
 		params.SearchKeyword = keyword
 		params.AssetTypes = {Enum.AvatarAssetType.EmoteAnimation}
@@ -257,7 +285,7 @@ return function(ctx)
 		return out
 	end
 
-	local function runSearch(append)
+	runSearch = function(append)
 		if busy or (append and finished) then return end
 		busy = true
 		if not append then
@@ -265,6 +293,7 @@ return function(ctx)
 			catGrid:SetStatus("Loading...")
 			lastKeyword = searchBox:Get()
 			cursor, finished, usingEditor, pages = nil, true, false, nil
+			tlog("cari: '" .. lastKeyword .. "'")
 		end
 		local ok, err = pcall(function()
 			local items = {}
@@ -281,7 +310,7 @@ return function(ctx)
 					cursor = data.nextPageCursor
 					finished = (cursor == nil)
 				else
-					warn("[ControlPanel] katalog emote (HTTP): " .. tostring(data))
+					tlog("katalog HTTP gagal: " .. tostring(data))
 					items = searchViaEditor(lastKeyword)
 				end
 			end
@@ -290,11 +319,13 @@ return function(ctx)
 					addEntry(catGrid, it.id, it.name or tostring(it.id), function() playEmote(it.id, nil) end)
 				end
 			end
+			tlog("hasil: " .. #items .. " item")
 			catGrid:SetStatus((#items == 0 and not append) and "No emotes found" or "")
 		end)
 		if not ok then
-			catGrid:SetStatus("Failed to load catalog")
-			warn("[ControlPanel] katalog emote: " .. tostring(err))
+			tlog("katalog gagal: " .. tostring(err))
+			local reason = tostring(err):gsub("^.-:%d+:%s*", ""):sub(1, 70)
+			catGrid:SetStatus("Failed to load catalog\n" .. reason)
 		end
 		busy = false
 	end
@@ -304,15 +335,18 @@ return function(ctx)
 
 	-- ===== Play by ID =====
 	local idSection = page:addSection("Play by ID")
-	local idBox = idSection:addTextBox("Emote ID", "Enter Emote ID")
-	idSection:addButton("Play Emote ID", function()
-		local id = tonumber((idBox:Get():gsub("%D", "")))
+	local function playFromText(text)
+		local id = tonumber((tostring(text):gsub("%D", "")))
 		if not id then
 			UI:notify("Invalid emote ID", "error")
 			return
 		end
 		playEmote(id, nil)
+	end
+	local idBox = idSection:addTextBox("Emote ID", "Enter Emote ID", function(text, enter)
+		if enter then playFromText(text) end 
 	end)
+	idSection:addButton("Play Emote ID", function() playFromText(idBox:Get()) end)
 
 	task.spawn(function()
 		task.wait(1)

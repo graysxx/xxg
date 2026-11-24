@@ -69,6 +69,7 @@ return {
 		{"Failed to play emote", "Gagal memutar emote"}, {"Invalid emote ID", "ID emote tidak valid"},
 		{"Emote Options", "Opsi Emote"}, {"Keep Emote While Moving", "Emote Tetap Jalan Saat Bergerak"},
 		{"Loop Emote", "Ulangi Emote"},
+		{"Failed to load emotes", "Gagal memuat emote"},
 		-- settings
 		{"Keybinds", "Keybind"}, {"Toggle Panel", "Tampilkan/Sembunyikan Panel"}, {"Appearance", "Tampilan"},
 		{"Theme", "Tema"}, {"Custom Color", "Warna Kustom"}, {"Background Transparency", "Transparansi Latar"},
