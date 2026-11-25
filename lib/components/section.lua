@@ -11,7 +11,6 @@ function section.new(pg, title)
 	pg.library:_registerHover(card, bg, pg, pop)
 	pg:_register(card, false, content)
 	return setmetatable({page = pg, library = pg.library, container = content, card = card, _order = 0}, section)
-	L.newRow = newRow
 end
 
 local function newRow(sec, height, className, extra)
