@@ -2,24 +2,26 @@ return {
 	Title = "XXG",
 	Subtitle = "Control Panel",
 	Version = "v1.0.0",
-	Updated = "November 22, 2026",
+	Updated = "November 21, 2026",
 	VersionURL = "",
 
-	Modules = {"Dashboard", "Vehicle", "Misc", "Player", "Noclip", "Target", "Spectate", "Emotes", "Settings", "ConfigManager"},
+	TabOrder = {"dashboard", "vehicle", "games", "misc", "player", "emotes", "settings"},
 
-	ConfigFolder = "XXGControlPanel", 
+	ConfigFolder = "ProjectControlPanel",
 
 	Defaults = {
-		Theme = "White",              -- White | Violet | Ocean | Emerald | Rose | Amber
-		Transparency = 40,            -- 0 .. 90
-		Language = "English",         -- English | Indonesia
+		Theme = "White",
+		Transparency = 40,
+		Language = "English",
 		ToggleKey = Enum.KeyCode.RightBracket,
 	},
 
 	NewsTitle = "What's New",
 	News = {
-		{Kind = "update", Date = "November 22, 2026", Title = "Version 1.0.0", Text = "Improved interface, added new features and performance optimizations."},
+		{Kind = "update", Date = "November 21, 2026", Title = "Version 1.0.0", Text = "Improved interface, added new features and performance optimizations."},
+		{Kind = "news",   Date = "November 19, 2026", Title = "New UI Design", Text = "A redesigned dashboard with a more modern and minimal interface."},
 	},
 
 	Discord = {Code = "fufqtW7Zs"},
 }
+
