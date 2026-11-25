@@ -1,9 +1,3 @@
-return function(L)
-	local section = L.section
-	local create, corner, stroke, padding, listLayout = L.create, L.corner, L.stroke, L.padding, L.listLayout
-	local popCard, surface, newLabel, tween = L.popCard, L.surface, L.newLabel, L.tween
-	local Theme, AUTO_Y = L.Theme, L.AUTO_Y
-
 function section.new(pg, title)
 	local card, pop, bg = popCard(pg.container, title)
 	local content = create("Frame", {
@@ -29,8 +23,8 @@ local function newRow(sec, height, className, extra)
 		props[k] = v
 	end
 	return surface(create(className or "Frame", props, {corner(8), stroke(Theme.Border, 0.4)}), 0.5)
-end
 	L.newRow = newRow
+end
 
 function section:addLabel(text)
 	self._order = self._order + 1
@@ -39,6 +33,7 @@ function section:addLabel(text)
 		TextYAlignment = Enum.TextYAlignment.Top, TextSize = 11, TextColor3 = Theme.Muted,
 		LayoutOrder = self._order, Parent = self.container,
 	})
+	L.newRow = newRow
 end
 
 function section:addInfo(title, value)
@@ -52,6 +47,5 @@ function section:addInfo(title, value)
 		val.Text = tostring(text)
 		if color then val.TextColor3 = color end
 	end}
-end
-
+	L.newRow = newRow
 end

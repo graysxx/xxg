@@ -1,6 +1,3 @@
-return function(L)
-	local create, corner = L.create, L.corner
-
 local function line(parent, x1, y1, x2, y2, thick, color)
 	local dx, dy = x2 - x1, y2 - y1
 	local len = math.sqrt(dx * dx + dy * dy)
@@ -73,7 +70,5 @@ local function makeIcon(name, parent, color, px)
 		L(4, 4, 12, 12); L(12, 4, 4, 12)
 	end
 	return f
-end
-
-	L.makeIcon = makeIcon
+	L.makeIcon = makeIcon	
 end

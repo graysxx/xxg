@@ -1,13 +1,3 @@
-return function(L)
-	local library = L.library
-	local LocalPlayer = L.LocalPlayer
-	local UserInputService, RunService, TextService = L.UserInputService, L.RunService, L.TextService
-	local Theme = L.Theme
-	local create, corner, stroke, padding, newLabel = L.create, L.corner, L.stroke, L.padding, L.newLabel
-	local surface, windowButton, makeDraggable, makeIcon = L.surface, L.windowButton, L.makeDraggable, L.makeIcon
-	local MINI_BAR_H, CHIP_PAD, CHIP_ICON, CHIP_GAP = L.MINI_BAR_H, L.CHIP_PAD, L.CHIP_ICON, L.CHIP_GAP
-	local MIN_W, MIN_H = L.MIN_W, L.MIN_H
-
 function library.new(title, subtitle, version)
 	local guiName = "ProjectControlPanel"
 	L.resetState()
@@ -305,6 +295,4 @@ function library.new(title, subtitle, version)
 	self:_animate(true)
 
 	return self
-end
-
 end
