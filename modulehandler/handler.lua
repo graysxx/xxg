@@ -101,14 +101,14 @@ return function(env)
 	if loader then loader.setTitle(Cfg.Title or "XXG") end
 	local D = Cfg.Defaults or {}
 
-		progress(62, "Loading library")
+	progress(62, "Loading library")
 	local L = {}
 	for _, name in ipairs(import("lib/index.lua")) do
+		log("Lib " .. name)
 		local ok, err = pcall(function() import("lib/" .. name .. ".lua")(L) end)
-		if not ok then error("lib/" .. name .. ".lua -> " .. tostring(err), 0) end
-	end
-	for _, key in ipairs({"library", "page", "section"}) do
-		assert(L[key], "L." .. key .. " EMPTY: Check lib/core/classes.lua & lib/index.lua")
+		if not ok then
+			error(string.format("lib/%s.lua -> %s | L.library=%s", name, tostring(err), tostring(L.library ~= nil)), 0)
+		end
 	end
 
 	local langs, dyn = {}, {}
