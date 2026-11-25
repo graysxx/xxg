@@ -9,7 +9,6 @@ local function line(parent, x1, y1, x2, y2, thick, color)
 		Rotation = math.deg(math.atan2(dy, dx)),
 		BackgroundColor3 = color, BorderSizePixel = 0, Parent = parent,
 	}, {corner(thick / 2)})
-	L.makeIcon = makeIcon
 end
 
 local function makeIcon(name, parent, color, px)
