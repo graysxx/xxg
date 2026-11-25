@@ -102,12 +102,23 @@ return function(env)
 	local D = Cfg.Defaults or {}
 
 	progress(62, "Loading library")
-	local L = {}
-	for _, name in ipairs(import("lib/index.lua")) do
+	local L = {library = {}, page = {}, section = {}}
+	local order = import("lib/index.lua")
+	assert(table.find(order, "core/classes"), 'lib/index.lua tidak berisi "core/classes"')
+
+	local loadOrder = {}
+	for _, n in ipairs(order) do
+		if n:match("^core/") then table.insert(loadOrder, n) end
+	end
+	for _, n in ipairs(order) do
+		if not n:match("^core/") then table.insert(loadOrder, n) end
+	end
+
+	for _, name in ipairs(loadOrder) do
 		log("Lib " .. name)
 		local ok, err = pcall(function() import("lib/" .. name .. ".lua")(L) end)
 		if not ok then
-			error(string.format("lib/%s.lua -> %s | L.library=%s", name, tostring(err), tostring(L.library ~= nil)), 0)
+			error(string.format("lib/%s.lua -> %s", name, tostring(err)), 0)
 		end
 	end
 
