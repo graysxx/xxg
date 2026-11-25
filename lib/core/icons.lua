@@ -68,5 +68,6 @@ local function makeIcon(name, parent, color, px)
 	elseif name == "cross" then
 		L(4, 4, 12, 12); L(12, 4, 4, 12)
 	end
+	L.makeIcon = makeIcon
 	return f
 end
