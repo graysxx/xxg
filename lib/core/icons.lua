@@ -69,5 +69,4 @@ local function makeIcon(name, parent, color, px)
 		L(4, 4, 12, 12); L(12, 4, 4, 12)
 	end
 	return f
-L.makeIcon = makeIcon
 end
