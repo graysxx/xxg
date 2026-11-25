@@ -10,6 +10,7 @@ local function line(parent, x1, y1, x2, y2, thick, color)
 	}, {corner(thick / 2)})
 end
 
+
 local function makeIcon(name, parent, color, px)
 	local k = px / 16
 	local th = math.max(1.4, 1.6 * k)
@@ -67,7 +68,7 @@ local function makeIcon(name, parent, color, px)
 		L(3.5, 8.5, 6.8, 11.8); L(6.8, 11.8, 12.6, 4.6)
 	elseif name == "cross" then
 		L(4, 4, 12, 12); L(12, 4, 4, 12)
+	L.makeIcon = makeIcon	
 	end
-	L.makeIcon = makeIcon
 	return f
 end
