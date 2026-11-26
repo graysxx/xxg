@@ -121,7 +121,12 @@ return function(env)
 	end
 	for _, name in ipairs(loadOrder) do
 		local before = count(L)
-		local ok, err = pcall(function() import("lib/" .. name .. ".lua")(L) end)
+		local ok, err = pcall(function()
+			local result = import("lib/" .. name .. ".lua")(L)
+			if type(result) == "function" then
+				error('contain "return function(L)": DELETE', 0)
+			end
+		end)
 		if not ok then
 			error(string.format("lib/%s.lua -> %s", name, tostring(err)), 0)
 		end
