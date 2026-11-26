@@ -9,9 +9,9 @@ return function(env)
 	-- ===== Setting Up Files =====
 	local sources = {}
 	local function preload(path)
-		log("Fetching " .. path)
 		sources[path] = env.get(path)
-		task.wait()
+		log(string.format("Fetching %s (%d bytes)", path, #sources[path]))
+		task.wait() 
 	end
 	local function import(path)
 		if not sources[path] then preload(path) end
@@ -114,12 +114,18 @@ return function(env)
 		if not n:match("^core/") then table.insert(loadOrder, n) end
 	end
 
+	local function count(t)
+		local n = 0
+		for _ in pairs(t) do n = n + 1 end
+		return n
+	end
 	for _, name in ipairs(loadOrder) do
-		log("Lib " .. name)
+		local before = count(L)
 		local ok, err = pcall(function() import("lib/" .. name .. ".lua")(L) end)
 		if not ok then
 			error(string.format("lib/%s.lua -> %s", name, tostring(err)), 0)
 		end
+		log(string.format("Lib %s (+%d)", name, count(L) - before))
 	end
 
 	local required = {

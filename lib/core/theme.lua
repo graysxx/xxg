@@ -33,6 +33,7 @@ return function(L)
 			Red        = Color3.fromRGB(239, 68, 68),
 		}
 
+		-- Preset tema: hanya warna aksen yang berganti. Warna tiap preset harus unik terhadap Green/Orange/Blue/Red.
 		L.ThemePresets = {
 			White   = {Accent = Color3.fromRGB(255, 255, 255), AccentSoft = Color3.fromRGB(46, 47, 54),  AccentLine = Color3.fromRGB(110, 112, 124)},
 			Violet  = {Accent = Color3.fromRGB(167, 139, 250), AccentSoft = Color3.fromRGB(44, 38, 82),  AccentLine = Color3.fromRGB(88, 74, 160)},
