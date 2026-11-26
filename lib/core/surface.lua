@@ -35,7 +35,6 @@ return function(L)
 			return math.floor(c.R * 255 + 0.5) * 65536 + math.floor(c.G * 255 + 0.5) * 256 + math.floor(c.B * 255 + 0.5)
 		end
 
-		-- Slider 
 		function L.accentGradient()
 			local a = Theme.Accent
 			if 0.299 * a.R + 0.587 * a.G + 0.114 * a.B > 0.8 then

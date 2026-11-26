@@ -122,6 +122,19 @@ return function(env)
 		end
 	end
 
+	local required = {
+		"Theme", "create", "tween", "apply", "corner", "stroke", "padding", "listLayout", "newLabel",
+		"Surfaces", "themeHooks", "S", "resetState", "surface", "colorKey", "accentGradient", "accentOutline", "panelBg",
+		"makeIcon", "popCard", "makeDraggable", "windowButton", "newRow", "AUTO_Y", "HOVER_SCALE",
+	}
+	local missing = {}
+	for _, k in ipairs(required) do
+		if L[k] == nil then table.insert(missing, k) end
+	end
+	if #missing > 0 then
+		error("lib not complete: LOST" .. table.concat(missing, ", "), 0)
+	end
+
 	local langs, dyn = {}, {}
 	for _, p in ipairs(wanted) do
 		local code = p:match("^lang/([^/]+)/index%.lua$")
