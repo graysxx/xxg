@@ -45,7 +45,7 @@ return {order = 1, page = false, build = function(ctx)
 
 	function T.setTarget(p) 
 		T.target, T.lastKnown = p, nil
-		if T.targetInfo then T.targetInfo:Set(p and p.DisplayName or UI:tr("None")) end
+		if T.targetInfo then T.targetInfo:Set(p and p.DisplayName or "None") end
 		if not p then
 			if T.playerDrop then T.playerDrop:Set("") end
 			for _, fn in ipairs(T.onClear) do pcall(fn) end

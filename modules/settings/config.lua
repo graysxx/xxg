@@ -82,7 +82,7 @@ return {order = 60, build = function(ctx, tab)
 			nameBox:Set("")
 			if loadDrop then loadDrop:Refresh() end
 			if delDrop then delDrop:Refresh() end
-			UI:notify(existed and ctx.dyn("updated", name) or ctx.dyn("saved", name), "success")
+			UI:notify(existed and ('Config "' .. name .. '" updated') or ('Config "' .. name .. '" saved'), "success")
 		else
 			UI:notify("Failed to save config", "error")
 		end
@@ -92,7 +92,7 @@ return {order = 60, build = function(ctx, tab)
 		local ok, data = pcall(function() return HttpService:JSONDecode(readfile(cfgPath(name))) end)
 		if ok and type(data) == "table" then
 			applyConfig(data)
-			UI:notify(ctx.dyn("loaded", name), "success")
+			UI:notify(('Config "' .. name .. '" loaded'), "success")
 		else
 			UI:notify("Failed to load config", "error")
 		end
@@ -133,7 +133,7 @@ return {order = 60, build = function(ctx, tab)
 		end)
 
 		if ok then
-			UI:notify(ctx.dyn("deleted", name), "success")
+			UI:notify(('Config "' .. name .. '" deleted'), "success")
 		else
 			UI:notify("Failed to delete config", "error")
 		end

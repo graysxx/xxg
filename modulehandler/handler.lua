@@ -146,34 +146,10 @@ return function(env)
 		error("lib not complete: LOST" .. table.concat(missing, ", "), 0)
 	end
 
-	local langs, dyn = {}, {}
-	for _, p in ipairs(wanted) do
-		local code = p:match("^lang/([^/]+)/index%.lua$")
-		if code then
-			local def = import(p)
-			table.insert(langs, {code = code, def = def})
-			dyn[code] = def.dyn
-		end
-	end
-	table.sort(langs, function(a, b)
-		if a.code == "en" then return true end
-		if b.code == "en" then return false end
-		return (a.def.name or a.code) < (b.def.name or b.code)
-	end)
-
 	progress(64, "Creating window")
 	log("Creating window")
 	local UI = L.library.new(Cfg.Title, Cfg.Subtitle, Cfg.Version)
 	UI:setBackgroundTransparency((D.Transparency or 40) / 100)
-	for _, l in ipairs(langs) do
-		UI:registerLanguage(l.code, l.def.name or l.code, l.def.strings)
-	end
-
-	local function dynText(key, ...)
-		local code = UI:getLanguage()
-		local text = (dyn[code] and dyn[code][key]) or (dyn.en and dyn.en[key]) or key
-		return string.format(text, ...)
-	end
 
 	local ctx = {
 		UI = UI, Theme = UI.Theme, Cfg = Cfg, dyn = dynText, import = import,
@@ -255,9 +231,8 @@ return function(env)
 	end
 	if firstPage then UI:SelectPage(firstPage) end
 
-	progress(98, "Applying theme & language")
+	progress(98, "Applying theme")
 	UI:setTheme(D.Theme or "White")
-	UI:setLanguage(D.Language or "English")
 
 	UI.OnClose = function()
 		for _, m in pairs(ctx.modules) do

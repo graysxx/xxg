@@ -6,7 +6,7 @@ return {order = 50, build = function(ctx, tab)
 		local p = T.byLabel[label]
 		if p then T.setTarget(p) end
 	end)
-	T.targetInfo = section:addInfo("Target", UI:tr("None"))
+	T.targetInfo = section:addInfo("Target", "None")
 
 	section:addButton("Clear Target", function()
 		T.setTarget(nil)

@@ -52,7 +52,7 @@ return function(L)
 
 		function api:SetStatus(text)
 			text = text or ""
-			status.Text = lib:tr(text)
+			status.Text = text
 			status.Visible = text ~= ""
 		end
 

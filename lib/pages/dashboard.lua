@@ -71,7 +71,7 @@ return function(L)
 						value.Text = v
 						value.TextSize = (#v > 11) and 16 or 21 
 					end
-					if s ~= nil then status.Text = self.library:tr(s) end
+					if s ~= nil then status.Text = s end
 					if c ~= nil then status.TextColor3 = c end
 				end,
 			}
@@ -212,7 +212,7 @@ return function(L)
 		self.library:_registerHover(card, bg, self, pop)
 		self:_register(card, false, content)
 		return {SetStatus = function(_, text, color)
-			statusLabel.Text = self.library:tr(text)
+			statusLabel.Text = text
 			if color then statusLabel.TextColor3 = color end
 		end}
 	end

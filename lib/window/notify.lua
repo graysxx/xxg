@@ -15,7 +15,6 @@ return function(L)
 	function library:notify(text, kind)
 		if self.closing then return end
 		kind = kind or "success"
-		text = self:tr(text)
 		self._toastId = (self._toastId or 0) + 1
 
 		local slot = create("Frame", {

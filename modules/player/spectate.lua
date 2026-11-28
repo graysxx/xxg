@@ -35,7 +35,7 @@ return {order = 80, build = function(ctx, tab)
 
 	local function stop(silent)
 		spectating = nil
-		info:Set(UI:tr("None"))
+		info:Set("None")
 		drop:Set("")
 		setSubject(humanoidOf(LocalPlayer))
 		if not silent then UI:notify("Spectate stopped", "success") end
@@ -66,7 +66,7 @@ return {order = 80, build = function(ctx, tab)
 
 	local section = tab:addSection("Spectate")
 	drop = section:addDropdown("Select Player", listNames, function(label) start(byLabel[label]) end)
-	info = section:addInfo("Spectating", UI:tr("None"))
+	info = section:addInfo("Spectating", "None")
 	section:addButton("Previous Player", function() step(-1) end)
 	section:addButton("Next Player", function() step(1) end)
 	section:addButton("Exit Spectate", function()

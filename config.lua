@@ -5,14 +5,13 @@ return {
 	Updated = "November 21, 2026",
 	VersionURL = "",
 
-	TabOrder = {"dashboard", "vehicle", "games", "misc", "player", "emotes", "settings"},
+	TabOrder = {"dashboard", "vehicle", "games", "misc", "player", "avatar", "emotes", "settings"},
 
 	ConfigFolder = "ProjectControlPanel",
 
 	Defaults = {
 		Theme = "White",
 		Transparency = 40,
-		Language = "English",
 		ToggleKey = Enum.KeyCode.RightBracket,
 	},
 

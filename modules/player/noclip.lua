@@ -1,4 +1,4 @@
-return {order = 20, build = function(ctx, tab)
+return {order = 42, build = function(ctx, tab)
 	local UI = ctx.UI
 	local RunService = game:GetService("RunService")
 	local LocalPlayer = game:GetService("Players").LocalPlayer
@@ -38,7 +38,7 @@ return {order = 20, build = function(ctx, tab)
 		end
 	end)
 
-	ctx.modules["misc.noclip"] = {
+	ctx.modules["player.noclip"] = {
 		shutdown = function()
 			enabled = false
 			restore()
