@@ -13,18 +13,13 @@ return {order = 80, build = function(ctx, tab)
 	end)
 
 	section:addButton("Reset Avatar", function()
-		if not A.original then
-			UI:notify("Original avatar not loaded yet", "error")
-			return
-		end
-		A.desc = A.original:Clone()
-		local ok, err = A.preview()
+		local ok, note = A.reset()
 		if ok then
 			UI:notify("Avatar reset (preview only)", "success")
 		else
-			UI:notify("Reset preview failed: " .. tostring(err), "error")
+			UI:notify("Reset failed: " .. tostring(note), "error")
 		end
 	end)
 
-	section:addLabel("Other players only see what is saved on your account. Save opens Roblox's own confirmation dialog and replaces your real avatar (only items you own are kept). Respawn afterwards. Games with custom characters ignore it. To go back: Reset Avatar, then save again.")
+	section:addLabel("Other players only see what is saved on your account. Save opens Roblox's own confirmation dialog and replaces your real avatar (only items you own are kept). Respawn afterwards. Games with custom characters ignore it.")
 end}

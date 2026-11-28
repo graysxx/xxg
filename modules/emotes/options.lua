@@ -6,5 +6,6 @@ return {order = 10, build = function(ctx, tab)
 		E.opts.loopEmote = v
 		E.setLoop(v)
 	end)
+	section:addSlider("Emote Speed", 100, 25, 300, function(v) E.setSpeed(v / 100) end, "%")
 	section:addButton("Stop Emote", E.stop)
 end}

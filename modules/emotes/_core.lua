@@ -5,7 +5,7 @@ return {order = 0, page = false, build = function(ctx)
 	local HttpService = game:GetService("HttpService")
 	local LocalPlayer = Players.LocalPlayer
 
-	local E = {opts = {keepMoving = false, loopEmote = false}, favList = {}}
+	local E = {opts = {keepMoving = false, loopEmote = false, speed = 1}, favList = {}}
 	ctx.emotes = E
 	local activeTrack, trackDirect, stopped, lastPos = nil, false, true, 0
 	local painters = {} 
@@ -101,6 +101,11 @@ return {order = 0, page = false, build = function(ctx)
 		if v and activeTrack then pcall(function() activeTrack.Looped = true end) end
 	end
 
+	function E.setSpeed(v)
+		E.opts.speed = v
+		if activeTrack then pcall(function() activeTrack:AdjustSpeed(v) end) end
+	end
+
 	local function playDirect(id)
 		local animator = animatorOf(humanoid())
 		if not animator then return nil end
@@ -182,6 +187,7 @@ return {order = 0, page = false, build = function(ctx)
 		trackDirect = direct
 		activeTrack = (typeof(track) == "Instance") and track or nil
 		lastPos = 0
+		if activeTrack then pcall(function() activeTrack:AdjustSpeed(E.opts.speed) end) end
 	end
 
 	-- Keep Moving
@@ -211,6 +217,7 @@ return {order = 0, page = false, build = function(ctx)
 				activeTrack.Priority = Enum.AnimationPriority.Action4
 				if E.opts.loopEmote then activeTrack.Looped = true end
 				activeTrack:Play(0.15)
+				activeTrack:AdjustSpeed(E.opts.speed)
 			end)
 		else
 			stopped, activeTrack = true, nil

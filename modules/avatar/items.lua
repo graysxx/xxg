@@ -2,7 +2,7 @@ return {order = 40, build = function(ctx, tab)
 	local UI, A = ctx.UI, ctx.avatar
 	local Marketplace = game:GetService("MarketplaceService")
 
-	-- AssetTypeId -> tipe aksesori / field di HumanoidDescription
+	-- AssetTypeId -> tipe aksesori / field di HumanoidDescription (dipakai saat Save ke akun)
 	local accessoryTypes = {
 		[8] = "Hat", [41] = "Hair", [42] = "Face", [43] = "Neck", [44] = "Shoulder", [45] = "Front", [46] = "Back", [47] = "Waist",
 		[64] = "TShirt", [65] = "Shirt", [66] = "Pants", [67] = "Jacket", [68] = "Sweater", [69] = "Shorts",
@@ -30,30 +30,6 @@ return {order = 40, build = function(ctx, tab)
 		return true
 	end
 
-	-- cadangan pratinjau kalau ApplyDescription ditolak: pasang item langsung ke karakter
-	local function localEquip(id)
-		local c, h = A.character(), A.humanoid()
-		if not (c and h) then return false end
-		local ok, objs = pcall(function() return game:GetObjects("rbxassetid://" .. id) end)
-		local obj = ok and objs and objs[1]
-		if not obj then return false end
-		if obj:IsA("Accessory") then
-			h:AddAccessory(obj)
-		elseif obj:IsA("Shirt") then
-			local s = c:FindFirstChildOfClass("Shirt") or Instance.new("Shirt", c)
-			s.ShirtTemplate = obj.ShirtTemplate
-		elseif obj:IsA("Pants") then
-			local p = c:FindFirstChildOfClass("Pants") or Instance.new("Pants", c)
-			p.PantsTemplate = obj.PantsTemplate
-		elseif obj:IsA("ShirtGraphic") then
-			local g = c:FindFirstChildOfClass("ShirtGraphic") or Instance.new("ShirtGraphic", c)
-			g.Graphic = obj.Graphic
-		else
-			return false
-		end
-		return true
-	end
-
 	local function equip(text)
 		local id = tonumber((tostring(text):gsub("%D", "")))
 		if not id then
@@ -65,18 +41,14 @@ return {order = 40, build = function(ctx, tab)
 			UI:notify("Item not found", "error")
 			return
 		end
-		local added, why = addToDescription(id, info.AssetTypeId)
-		if not added then
-			UI:notify("Cannot add item: " .. tostring(why), "error")
-			return
-		end
-		local ok = A.preview()
-		if not ok then ok = localEquip(id) end
 		local name = tostring(info.Name or id):sub(1, 30)
+		addToDescription(id, info.AssetTypeId) -- supaya ikut tersimpan kalau avatar di-save
+
+		local ok, why = A.equipLocal(id)
 		if ok then
 			UI:notify("Equipped: " .. name .. " (only you see it until you save)", "success")
 		else
-			UI:notify("Preview failed, but " .. name .. " is queued for saving", "info")
+			UI:notify("Preview failed: " .. tostring(why), "error")
 		end
 	end
 
@@ -87,12 +59,9 @@ return {order = 40, build = function(ctx, tab)
 	section:addButton("Equip Item", function() equip(box:Get()) end)
 	section:addButton("Remove Accessories", function()
 		if A.desc then pcall(function() A.desc:SetAccessories({}, true) end) end
-		local ok = A.preview()
-		if not ok then
-			local h = A.humanoid()
-			if h then pcall(function() for _, a in ipairs(h:GetAccessories()) do a:Destroy() end end) end
-		end
+		local h = A.humanoid()
+		if h then pcall(function() for _, a in ipairs(h:GetAccessories()) do a:Destroy() end end) end
 		UI:notify("Accessories removed", "success")
 	end)
-	section:addLabel("The item type is detected automatically from the catalog ID. Use the item ID from the catalog page URL.")
+	section:addLabel("Works for accessories, layered clothing, shirts, pants, t-shirts and faces. Use the item ID from the catalog page URL.")
 end}
