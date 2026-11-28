@@ -26,12 +26,12 @@ return {order = 10, build = function(ctx, tab)
 		end
 
 		A.desc = desc
-		local ok, note = A.build(desc, userId)
+		local ok, why = A.build(desc)
 		busy = false
 		if ok then
-			UI:notify(note or "Avatar applied (only you see it until you save)", note and "info" or "success")
+			UI:notify("Avatar applied (only you see it)", "success")
 		else
-			UI:notify("Apply failed: " .. tostring(note), "error")
+			UI:notify("Apply failed: " .. tostring(why), "error")
 		end
 	end
 
@@ -40,5 +40,5 @@ return {order = 10, build = function(ctx, tab)
 		if enter then copyFrom(text) end -- Enter = langsung terapkan
 	end)
 	section:addButton("Apply Avatar", function() copyFrom(box:Get()) end)
-	section:addLabel("Applies another player's full avatar (body, head, face, hair, accessories, layered clothing, clothes) to your character. Only you can see it until you save it to your account.")
+	section:addLabel("Applies another player's full avatar (body, head, face, hair, accessories, layered clothing, clothes) to your character. It happens in place, with no respawn. Only you can see it.")
 end}
